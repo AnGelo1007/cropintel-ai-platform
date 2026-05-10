@@ -666,20 +666,20 @@
                     <div class="field-grid">
                         <div class="field-block">
                             <label for="plantingDateInput">Planting Date</label>
-                            <input type="date" id="plantingDateInput" data-vk="true">
+                            <input type="date" id="plantingDateInput" data-vk="true" inputmode="none">
                             <div class="field-help">Enter the planting date for more accurate stage and forecast.</div>
                         </div>
 
                         <div class="field-block">
                             <label for="cropAgeInput">Crop Age (days)</label>
-                            <input type="number" id="cropAgeInput" min="0" placeholder="Auto-computed from planting date" data-vk="true">
+                            <input type="number" id="cropAgeInput" min="0" placeholder="Auto-computed from planting date" data-vk="true" inputmode="none">
                             <div class="field-help">You may also enter crop age manually.</div>
                         </div>
                     </div>
 
                     <div class="field-block">
                         <label for="cropLocationInput">Crop Location / Position Note</label>
-                        <textarea id="cropLocationInput" placeholder="Example: 2nd eggplant at the left side near the fence" data-vk="true"></textarea>
+                        <textarea id="cropLocationInput" placeholder="Example: 2nd eggplant at the left side near the fence" data-vk="true" inputmode="none"></textarea>
                     </div>
 
                     <button type="submit" class="btn btn-green" id="analyzeBtn">Run Analysis</button>
@@ -711,7 +711,7 @@
             </div>
 
             <div class="search-wrap">
-                <input type="text" id="recordSearchInput" placeholder="Search by crop, location, planting date, crop age, health, or stage..." data-vk="true">
+                <input type="text" id="recordSearchInput" placeholder="Search by crop, location, planting date, crop age, health, or stage..." data-vk="true" inputmode="none">
             </div>
 
             <div id="recordsList" class="records-list">
@@ -741,7 +741,7 @@
 
             <div class="field-block">
                 <label for="cameraCropLocationInput">Crop Location / Position Note</label>
-                <textarea id="cameraCropLocationInput" placeholder="Example: crop near the gate or right side row" data-vk="true"></textarea>
+                <textarea id="cameraCropLocationInput" placeholder="Example: crop near the gate or right side row" data-vk="true" inputmode="none"></textarea>
             </div>
 
             <div class="camera-wrap">
