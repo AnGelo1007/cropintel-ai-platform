@@ -893,7 +893,7 @@
             [",","?","!","#","+"]
         ];
 
-        // Add this variable at the top of your script section
+        // --- UPDATED DYNAMIC CAMERA LOGIC ---
         let useBackCamera = true; 
         const flipCameraBtn = document.getElementById("flipCameraBtn");
 
@@ -902,35 +902,37 @@
             isStartingCamera = true;
 
             try {
+                // 1. Fully release the current camera hardware
                 await stopCamera();
                 clearSnapshotPreview();
+                setStatus("Switching camera...");
 
-                setStatus("Accessing camera...");
-                
-                // Define the facing mode based on the toggle state
+                // 2. Define facing mode: 'environment' (back) or 'user' (front)
                 const mode = useBackCamera ? "environment" : "user";
 
                 const constraints = {
                     video: {
-                        facingMode: { exact: mode }, // 'exact' forces the specific camera
+                        // 'ideal' allows for fallback if the specific lens is unavailable
+                        facingMode: { ideal: mode }, 
                         width: { ideal: 1280 },
                         height: { ideal: 720 }
                     },
                     audio: false
                 };
 
+                // 3. Request the new stream with the updated mode
                 const stream = await navigator.mediaDevices.getUserMedia(constraints);
                 currentStream = stream;
                 cameraVideo.srcObject = stream;
                 
+                // 4. Play the new stream
                 cameraVideo.onloadedmetadata = () => cameraVideo.play();
                 setStatus(`${useBackCamera ? "Back" : "Front"} camera active.`);
             } catch (error) {
-                console.error(error);
-                // Fallback to 'ideal' if 'exact' fails on some hardware
-                setError("Retrying with standard camera...");
-                const fallbackConstraints = { video: true };
-                const stream = await navigator.mediaDevices.getUserMedia(fallbackConstraints);
+                console.error("Flip error:", error);
+                setError("Camera switch failed. Retrying with default...");
+                // Fallback to basic camera if specific mode fails
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
                 currentStream = stream;
                 cameraVideo.srcObject = stream;
             } finally {
@@ -938,12 +940,11 @@
             }
         }
 
-        // Add the flip button listener
+        // 5. Flip Button Listener: Toggles state and restarts stream
         flipCameraBtn.addEventListener("click", async () => {
-            useBackCamera = !useBackCamera; // Toggle state
-            await startCamera(); // Restart with new mode
+            useBackCamera = !useBackCamera; 
+            await startCamera(); 
         });
-
         function setText(el, value) {
             const next = String(value ?? "");
             if (el.textContent !== next) el.textContent = next;
