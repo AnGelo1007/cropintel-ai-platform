@@ -832,6 +832,7 @@
         const openCameraBtn = document.getElementById("openCameraBtn");
         const closeCameraBtn = document.getElementById("closeCameraBtn");
         const startCameraBtn = document.getElementById("startCameraBtn");
+        const flipCameraBtn = document.getElementById("flipCameraBtn");
         const takePhotoBtn = document.getElementById("takePhotoBtn");
         const analyzeSnapshotBtn = document.getElementById("analyzeSnapshotBtn");
         const cameraVideo = document.getElementById("cameraVideo");
@@ -865,7 +866,6 @@
         let allRecords = [];
         let editingRecord = null;
         let currentStream = null;
-        let currentVideoTrack = null;
         let snapshotBlob = null;
         let isDemoMode = false;
         let snapshotPreviewUrl = null;
@@ -878,6 +878,7 @@
         let latestResultCacheKey = "";
         let isStartingCamera = false;
         let isStoppingCamera = false;
+        let useBackCamera = true; // State to track camera choice
 
         const DEMO_SESSION_KEY = "demo_mode_session";
         const DEMO_RECORDS_KEY = "demo_mode_records";
@@ -894,39 +895,61 @@
             [",","?","!","#","+"]
         ];
 
-        // --- CAMERA FLIP LOGIC ---
-        let useBackCamera = true; 
-        const flipCameraBtn = document.getElementById("flipCameraBtn");
+        async function stopCamera() {
+            if (isStoppingCamera) return;
+            isStoppingCamera = true;
+            try {
+                if (currentStream) {
+                    currentStream.getTracks().forEach(track => {
+                        try { track.stop(); } catch {}
+                    });
+                }
+                currentStream = null;
+                if (cameraVideo.srcObject) {
+                    cameraVideo.pause();
+                    cameraVideo.srcObject = null;
+                    cameraVideo.load();
+                }
+            } finally {
+                isStoppingCamera = false;
+            }
+        }
+
+        function clearSnapshotPreview() {
+            snapshotBlob = null;
+            if (snapshotPreviewUrl) {
+                URL.revokeObjectURL(snapshotPreviewUrl);
+                snapshotPreviewUrl = null;
+            }
+            snapshotPreview.removeAttribute("src");
+            snapshotPreview.classList.add("hidden");
+        }
 
         async function startCamera() {
             if (isStartingCamera) return;
             isStartingCamera = true;
-
             try {
-                // 1. Fully release hardware before switching
                 await stopCamera();
                 clearSnapshotPreview();
                 setStatus("Accessing camera...");
                 setError("");
-
-                // 2. Define facing mode dynamically
+                
+                // Define facing mode dynamically
                 const mode = useBackCamera ? "environment" : "user";
-
                 const constraints = {
                     video: {
-                        facingMode: { ideal: mode }, 
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 }
+                        facingMode: { ideal: mode },
+                        width: { ideal: 640, max: 640 },
+                        height: { ideal: 480, max: 480 },
+                        frameRate: { ideal: 12, max: 15 }
                     },
                     audio: false
                 };
 
-                // 3. Request stream with new mode
                 const stream = await navigator.mediaDevices.getUserMedia(constraints);
                 currentStream = stream;
-                currentVideoTrack = stream.getVideoTracks()[0] || null;
                 cameraVideo.srcObject = stream;
-                
+
                 await new Promise((resolve) => {
                     if (cameraVideo.readyState >= 2) {
                         resolve();
@@ -943,17 +966,15 @@
                 setStatus(`${useBackCamera ? "Back" : "Front"} camera active.`);
                 setError("");
             } catch (error) {
-                console.error("Camera error:", error);
-                setError("Camera switch failed. Using default camera.");
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                currentStream = stream;
-                cameraVideo.srcObject = stream;
-                await cameraVideo.play();
+                console.error(error);
+                setError(`Failed to access webcam: ${error.message || "Unknown error"}`);
+                setStatus("");
             } finally {
                 isStartingCamera = false;
             }
         }
 
+        // Flip Button Listener
         if (flipCameraBtn) {
             flipCameraBtn.addEventListener("click", async () => {
                 useBackCamera = !useBackCamera; 
@@ -1230,15 +1251,12 @@
                 applyRecordSearch();
                 return;
             }
-
             if (!currentUser) return;
-
             try {
                 if (!allRecords.length) {
                     recordsList.innerHTML = `<div>Loading your records...</div>`;
                     recordsHtmlCache = "";
                 }
-
                 const snapshot = await get(ref(db, `users/${currentUser.uid}/records`));
                 const data = snapshot.val() || {};
                 const records = Object.entries(data).map(([id, value]) => ({ id, ...value }));
@@ -1257,7 +1275,6 @@
         clearHistoryBtn.addEventListener("click", async () => {
             const confirmed = confirm("Clear all saved records?");
             if (!confirmed) return;
-
             try {
                 if (isDemoMode) {
                     saveDemoRecords([]);
@@ -1269,7 +1286,6 @@
                     setError("");
                     return;
                 }
-
                 if (!currentUser) return;
                 await remove(ref(db, `users/${currentUser.uid}/records`));
                 allRecords = [];
@@ -1302,28 +1318,23 @@
         recordsList.addEventListener("click", async (event) => {
             const button = event.target.closest("button[data-action]");
             if (!button) return;
-
             const action = button.dataset.action;
             const recordId = button.dataset.id;
             const record = allRecords.find(item => item.id === recordId);
             if (!record) return;
-
             if (action === "review") {
                 renderLatestResult(record);
                 setStatus("Showing the selected record.");
                 setError("");
                 return;
             }
-
             if (action === "update") {
                 openUpdateMode(record);
                 return;
             }
-
             if (action === "delete") {
                 const confirmed = confirm("Delete this record?");
                 if (!confirmed) return;
-
                 try {
                     if (isDemoMode) {
                         const updated = allRecords.filter(item => item.id !== recordId);
@@ -1334,7 +1345,6 @@
                         setError("");
                         return;
                     }
-
                     if (!currentUser) return;
                     await remove(ref(db, `users/${currentUser.uid}/records/${recordId}`));
                     if (editingRecord && editingRecord.id === recordId) closeUpdateMode();
@@ -1347,13 +1357,11 @@
                 }
                 return;
             }
-
             if (action === "edit-location") {
                 document.getElementById(`location-edit-${recordId}`)?.classList.remove("hidden");
                 bindVirtualKeyboardTargets(recordsList);
                 return;
             }
-
             if (action === "cancel-location") {
                 const editBox = document.getElementById(`location-edit-${recordId}`);
                 const input = document.getElementById(`location-input-${recordId}`);
@@ -1361,11 +1369,9 @@
                 editBox?.classList.add("hidden");
                 return;
             }
-
             if (action === "save-location") {
                 const input = document.getElementById(`location-input-${recordId}`);
                 const newLocation = input?.value?.trim() || "";
-
                 try {
                     if (isDemoMode) {
                         const updatedRecords = allRecords.map(item => {
@@ -1383,17 +1389,14 @@
                         setError("");
                         return;
                     }
-
                     if (!currentUser) return;
                     await update(ref(db, `users/${currentUser.uid}/records/${recordId}`), {
                         locationNote: newLocation,
                         updatedAt: Date.now()
                     });
-
                     if (editingRecord && editingRecord.id === recordId) {
                         editingRecord.locationNote = newLocation;
                     }
-
                     await loadUserRecords();
                     setStatus("Location updated.");
                     setError("");
@@ -1412,10 +1415,8 @@
                 updatedAt: now,
                 captured_at_ts: now
             };
-
             if (isDemoMode) {
                 let records = getDemoRecords();
-
                 if (editingRecord?.id) {
                     records = records.map(item => item.id === editingRecord.id ? { ...item, ...payload } : item);
                     payload.id = editingRecord.id;
@@ -1424,15 +1425,11 @@
                     payload.createdAt = now;
                     records.unshift(payload);
                 }
-
                 saveDemoRecords(records);
                 return payload;
             }
-
             if (!currentUser) throw new Error("No authenticated user.");
-
             payload.userUid = currentUser.uid;
-
             if (editingRecord?.id) {
                 await update(ref(db, `users/${currentUser.uid}/records/${editingRecord.id}`), payload);
                 payload.id = editingRecord.id;
@@ -1441,7 +1438,6 @@
                 await update(newRef, { ...payload, createdAt: now });
                 payload.id = newRef.key;
             }
-
             return payload;
         }
 
@@ -1452,7 +1448,6 @@
             if (cropAgeDays !== "" && cropAgeDays !== null && cropAgeDays !== undefined) {
                 formData.append("crop_age_days", String(cropAgeDays));
             }
-
             const response = await fetch("/api/analyze", { method: "POST", body: formData });
             const result = await response.json();
             if (!response.ok || !result.success) throw new Error(result.error || "Analysis failed.");
@@ -1463,37 +1458,20 @@
             analyzeBtn.disabled = true;
             setStatus(editingRecord ? "Updating crop record..." : "Analyzing crop image...");
             setError("");
-
             try {
                 const result = await requestAnalysis(file, plantingDate, cropAgeDays);
-
-                if (previewOverride) {
-                    result.preview_url = previewOverride;
-                }
-
+                if (previewOverride) { result.preview_url = previewOverride; }
                 const saved = await saveAnalysisRecord(result, locationNote);
-
-                if (previewOverride) {
-                    saved.preview_url = previewOverride;
-                }
-
+                if (previewOverride) { saved.preview_url = previewOverride; }
                 renderLatestResult(saved);
                 await loadUserRecords();
-
-                setStatus(editingRecord ? "Crop record updated successfully." : "Analysis completed and saved successfully.");
+                setStatus(editingRecord ? "Crop record updated successfully." : "Analysis completed successfully.");
                 setError("");
-
                 if (editingRecord) closeUpdateMode();
-
                 uploadForm.reset();
-                plantingDateInput.value = "";
-                cropAgeInput.value = "";
-                cropLocationInput.value = "";
-                imageInput.value = "";
             } catch (error) {
                 console.error(error);
                 setError(error.message || "Something went wrong during analysis.");
-                setStatus("");
             } finally {
                 analyzeBtn.disabled = false;
             }
@@ -1506,47 +1484,11 @@
                 setError("Please choose an image first.");
                 return;
             }
-
             const plantingDate = plantingDateInput.value.trim();
             const cropAgeDays = cropAgeInput.value.trim();
             const locationNote = cropLocationInput.value.trim();
             await handleAnalysis(file, plantingDate, cropAgeDays, locationNote);
         });
-
-        async function stopCamera() {
-            if (isStoppingCamera) return;
-            isStoppingCamera = true;
-
-            try {
-                if (currentStream) {
-                    currentStream.getTracks().forEach(track => {
-                        try { track.stop(); } catch {}
-                    });
-                }
-                currentStream = null;
-                currentVideoTrack = null;
-
-                if (cameraVideo.srcObject) {
-                    cameraVideo.pause();
-                    cameraVideo.srcObject = null;
-                    cameraVideo.load();
-                }
-            } finally {
-                isStoppingCamera = false;
-            }
-        }
-
-        function clearSnapshotPreview() {
-            snapshotBlob = null;
-
-            if (snapshotPreviewUrl) {
-                URL.revokeObjectURL(snapshotPreviewUrl);
-                snapshotPreviewUrl = null;
-            }
-
-            snapshotPreview.removeAttribute("src");
-            snapshotPreview.classList.add("hidden");
-        }
 
         openCameraBtn.addEventListener("click", async () => {
             cameraModal.classList.add("show");
@@ -1567,42 +1509,26 @@
                 setError("Start the camera first.");
                 return;
             }
-
             const width = cameraVideo.videoWidth || 640;
             const height = cameraVideo.videoHeight || 480;
-
             cameraCanvas.width = width;
             cameraCanvas.height = height;
-
-            const ctx = cameraCanvas.getContext("2d", {
-                alpha: false,
-                desynchronized: true,
-                willReadFrequently: false
-            });
-
+            const ctx = cameraCanvas.getContext("2d", { alpha: false, desynchronized: true });
             if (!ctx) {
                 setError("Failed to prepare camera snapshot.");
                 return;
             }
-
             ctx.drawImage(cameraVideo, 0, 0, width, height);
-
             cameraCanvas.toBlob((blob) => {
                 if (!blob) {
                     setError("Failed to capture snapshot.");
                     return;
                 }
-
                 snapshotBlob = blob;
-
-                if (snapshotPreviewUrl) {
-                    URL.revokeObjectURL(snapshotPreviewUrl);
-                }
-
+                if (snapshotPreviewUrl) { URL.revokeObjectURL(snapshotPreviewUrl); }
                 snapshotPreviewUrl = URL.createObjectURL(blob);
                 snapshotPreview.src = snapshotPreviewUrl;
                 snapshotPreview.classList.remove("hidden");
-
                 setStatus("Snapshot captured.");
                 setError("");
             }, "image/jpeg", 0.88);
@@ -1613,12 +1539,10 @@
                 setError("Take a snapshot first.");
                 return;
             }
-
             const plantingDate = cameraPlantingDateInput.value.trim();
             const cropAgeDays = cameraCropAgeInput.value.trim();
             const locationNote = cameraCropLocationInput.value.trim();
             const snapshotFile = new File([snapshotBlob], `snapshot_${Date.now()}.jpg`, { type: "image/jpeg" });
-
             await handleAnalysis(snapshotFile, plantingDate, cropAgeDays, locationNote, snapshotPreviewUrl);
             cameraModal.classList.remove("show");
             await stopCamera();
@@ -1626,9 +1550,7 @@
         });
 
         document.addEventListener("visibilitychange", async () => {
-            if (document.hidden) {
-                await stopCamera();
-            }
+            if (document.hidden) { await stopCamera(); }
         });
 
         window.addEventListener("beforeunload", async () => {
@@ -1647,13 +1569,8 @@
         function registerKioskTap(event) {
             if (event) event.preventDefault();
             kioskTapCount += 1;
-
-            if (kioskTapTimer) {
-                clearTimeout(kioskTapTimer);
-            }
-
+            if (kioskTapTimer) { clearTimeout(kioskTapTimer); }
             kioskTapTimer = setTimeout(resetKioskTapSequence, 1200);
-
             if (kioskTapCount >= 3) {
                 kioskExitPanel.classList.add("show");
                 setStatus("Hidden kiosk exit controls opened.");
@@ -1664,15 +1581,10 @@
 
         kioskExitZone.addEventListener("click", registerKioskTap);
         kioskExitZone.addEventListener("touchstart", registerKioskTap, { passive: false });
-
-        hideKioskExitBtn.addEventListener("click", () => {
-            kioskExitPanel.classList.remove("show");
-        });
-
+        hideKioskExitBtn.addEventListener("click", () => { kioskExitPanel.classList.remove("show"); });
         exitKioskBtn.addEventListener("click", async () => {
             try {
                 setStatus("Exiting kiosk...");
-                setError("");
                 await fetch("/api/exit-kiosk", { method: "POST" });
             } catch (error) {
                 console.error(error);
@@ -1682,11 +1594,7 @@
 
         function enableDemoMode(session) {
             isDemoMode = true;
-            currentUser = {
-                uid: "demo-mode-user",
-                email: session?.email || "demo@offline.local"
-            };
-
+            currentUser = { uid: "demo-mode-user", email: session?.email || "demo@offline.local" };
             modeBadge.classList.remove("hidden");
             userBadge.textContent = session?.displayName || "Demo Mode User";
             loadUserRecords();
@@ -1702,19 +1610,14 @@
         }
 
         function renderKeyboard() {
-            vkRowLetters1.innerHTML = "";
-            vkRowLetters2.innerHTML = "";
-            vkRowLetters3.innerHTML = "";
-            vkRowLetters4.innerHTML = "";
-            vkRowNumbers1.innerHTML = "";
-            vkRowNumbers2.innerHTML = "";
+            vkRowLetters1.innerHTML = ""; vkRowLetters2.innerHTML = "";
+            vkRowLetters3.innerHTML = ""; vkRowLetters4.innerHTML = "";
+            vkRowNumbers1.innerHTML = ""; vkRowNumbers2.innerHTML = "";
             vkRowNumbers3.innerHTML = "";
-
             LETTER_ROWS[0].forEach(key => vkRowLetters1.appendChild(createVkKey(key, key)));
             LETTER_ROWS[1].forEach(key => vkRowLetters2.appendChild(createVkKey(key, key)));
             LETTER_ROWS[2].forEach(key => vkRowLetters3.appendChild(createVkKey(key, key)));
             ["-","/",".","@","_"].forEach(key => vkRowLetters4.appendChild(createVkKey(key, key)));
-
             NUM_ROWS[0].forEach(key => vkRowNumbers1.appendChild(createVkKey(key, key)));
             NUM_ROWS[1].forEach(key => vkRowNumbers2.appendChild(createVkKey(key, key)));
             NUM_ROWS[2].forEach(key => vkRowNumbers3.appendChild(createVkKey(key, key)));
@@ -1732,51 +1635,31 @@
             virtualKeyboard.classList.add("show");
             const type = (target.type || "").toLowerCase();
             setKeyboardMode(type === "number" || type === "date");
-
-            requestAnimationFrame(() => {
-                target.scrollIntoView({ block: "center", behavior: "auto" });
-            });
+            requestAnimationFrame(() => { target.scrollIntoView({ block: "center", behavior: "auto" }); });
         }
 
-        function hideKeyboard() {
-            virtualKeyboard.classList.remove("show");
-            activeVkInput = null;
-        }
+        function hideKeyboard() { virtualKeyboard.classList.remove("show"); activeVkInput = null; }
 
         function insertAtCursor(text) {
             if (!activeVkInput) return;
-
             const input = activeVkInput;
-            const type = (input.type || "").toLowerCase();
             const start = input.selectionStart ?? input.value.length;
             const end = input.selectionEnd ?? input.value.length;
             const value = input.value || "";
-
-            if (type === "number" && !/^[0-9.\-]*$/.test(text)) {
-                return;
-            }
-
             input.value = value.slice(0, start) + text + value.slice(end);
-
             const nextPos = start + text.length;
-            if (typeof input.setSelectionRange === "function") {
-                input.setSelectionRange(nextPos, nextPos);
-            }
-
+            if (typeof input.setSelectionRange === "function") { input.setSelectionRange(nextPos, nextPos); }
             input.dispatchEvent(new Event("input", { bubbles: true }));
             input.focus();
         }
 
         function backspaceAtCursor() {
             if (!activeVkInput) return;
-
             const input = activeVkInput;
             const start = input.selectionStart ?? input.value.length;
             const end = input.selectionEnd ?? input.value.length;
             const value = input.value || "";
-
             if (start === 0 && end === 0) return;
-
             if (start !== end) {
                 input.value = value.slice(0, start) + value.slice(end);
                 input.setSelectionRange?.(start, start);
@@ -1784,7 +1667,6 @@
                 input.value = value.slice(0, start - 1) + value.slice(end);
                 input.setSelectionRange?.(start - 1, start - 1);
             }
-
             input.dispatchEvent(new Event("input", { bubbles: true }));
             input.focus();
         }
@@ -1800,18 +1682,12 @@
             });
         }
 
-        vkModeBtn.addEventListener("click", () => {
-            setKeyboardMode(!vkNumbersMode);
-        });
-
+        vkModeBtn.addEventListener("click", () => { setKeyboardMode(!vkNumbersMode); });
         vkBackspaceBtn.addEventListener("click", backspaceAtCursor);
         vkSpaceBtn.addEventListener("click", () => insertAtCursor(" "));
         vkHideBtn.addEventListener("click", hideKeyboard);
-
         document.addEventListener("click", (event) => {
-            const insideKeyboard = virtualKeyboard.contains(event.target);
-            const vkField = event.target.closest('input[data-vk="true"], textarea[data-vk="true"]');
-            if (!insideKeyboard && !vkField) {
+            if (!virtualKeyboard.contains(event.target) && !event.target.closest('input[data-vk="true"], textarea[data-vk="true"]')) {
                 hideKeyboard();
             }
         });
@@ -1820,15 +1696,10 @@
         bindVirtualKeyboardTargets(document);
 
         const demoSession = getDemoSession();
-        if (demoSession?.enabled) {
-            enableDemoMode(demoSession);
-        } else {
+        if (demoSession?.enabled) { enableDemoMode(demoSession); }
+        else {
             onAuthStateChanged(auth, async (user) => {
-                if (!user) {
-                    window.location.href = "/auth";
-                    return;
-                }
-
+                if (!user) { window.location.href = "/auth"; return; }
                 currentUser = user;
                 userBadge.textContent = user.email || "Logged in user";
                 await loadUserRecords();
