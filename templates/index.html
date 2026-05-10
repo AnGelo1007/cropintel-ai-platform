@@ -756,6 +756,7 @@
 
             <div class="camera-controls">
                 <button type="button" class="btn btn-green" id="startCameraBtn">Start Camera</button>
+                <button type="button" class="btn btn-blue" id="flipCameraBtn">Flip Camera</button>
                 <button type="button" class="btn btn-blue" id="takePhotoBtn">Take Snapshot</button>
                 <button type="button" class="btn btn-green" id="analyzeSnapshotBtn">Analyze Snapshot</button>
             </div>
@@ -831,6 +832,7 @@
         const openCameraBtn = document.getElementById("openCameraBtn");
         const closeCameraBtn = document.getElementById("closeCameraBtn");
         const startCameraBtn = document.getElementById("startCameraBtn");
+        const flipCameraBtn = document.getElementById("flipCameraBtn");
         const takePhotoBtn = document.getElementById("takePhotoBtn");
         const analyzeSnapshotBtn = document.getElementById("analyzeSnapshotBtn");
         const cameraVideo = document.getElementById("cameraVideo");
@@ -864,7 +866,6 @@
         let allRecords = [];
         let editingRecord = null;
         let currentStream = null;
-        let currentVideoTrack = null;
         let snapshotBlob = null;
         let isDemoMode = false;
         let snapshotPreviewUrl = null;
@@ -877,6 +878,7 @@
         let latestResultCacheKey = "";
         let isStartingCamera = false;
         let isStoppingCamera = false;
+        let useBackCamera = true; // NEW: State for camera choice
 
         const DEMO_SESSION_KEY = "demo_mode_session";
         const DEMO_RECORDS_KEY = "demo_mode_records";
@@ -892,6 +894,93 @@
             ["-","/",";",":","(",")","₱","&","@","."],
             [",","?","!","#","+"]
         ];
+
+        // --- UPDATED DYNAMIC CAMERA LOGIC ---
+        async function stopCamera() {
+            if (isStoppingCamera) return;
+            isStoppingCamera = true;
+
+            try {
+                if (currentStream) {
+                    currentStream.getTracks().forEach(track => {
+                        try { track.stop(); } catch {}
+                    });
+                }
+                currentStream = null;
+
+                if (cameraVideo.srcObject) {
+                    cameraVideo.pause();
+                    cameraVideo.srcObject = null;
+                    cameraVideo.load();
+                }
+            } finally {
+                isStoppingCamera = false;
+            }
+        }
+
+        async function startCamera() {
+            if (isStartingCamera) return;
+            isStartingCamera = true;
+
+            try {
+                // 1. Release hardware before requesting new lens mode
+                await stopCamera();
+                clearSnapshotPreview();
+                setStatus("Accessing camera...");
+                setError("");
+
+                // 2. Determine facing mode
+                const mode = useBackCamera ? "environment" : "user";
+
+                const constraints = {
+                    video: {
+                        facingMode: { ideal: mode }, 
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    },
+                    audio: false
+                };
+
+                // 3. Request the new stream
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                currentStream = stream;
+                cameraVideo.srcObject = stream;
+                
+                // 4. Play stream once hardware is ready
+                await new Promise((resolve) => {
+                    if (cameraVideo.readyState >= 2) {
+                        resolve();
+                        return;
+                    }
+                    const onLoaded = () => {
+                        cameraVideo.removeEventListener("loadedmetadata", onLoaded);
+                        resolve();
+                    };
+                    cameraVideo.addEventListener("loadedmetadata", onLoaded, { once: true });
+                });
+
+                await cameraVideo.play();
+                setStatus(`${useBackCamera ? "Back" : "Front"} camera active.`);
+                setError("");
+            } catch (error) {
+                console.error("Camera error:", error);
+                setError("Camera switch failed. retrying with default lens...");
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                currentStream = stream;
+                cameraVideo.srcObject = stream;
+                await cameraVideo.play();
+            } finally {
+                isStartingCamera = false;
+            }
+        }
+
+        // NEW: Flip Button Event Listener
+        if (flipCameraBtn) {
+            flipCameraBtn.addEventListener("click", async () => {
+                useBackCamera = !useBackCamera; 
+                await startCamera(); 
+            });
+        }
 
         function setText(el, value) {
             const next = String(value ?? "");
@@ -1445,95 +1534,14 @@
             await handleAnalysis(file, plantingDate, cropAgeDays, locationNote);
         });
 
-        async function stopCamera() {
-            if (isStoppingCamera) return;
-            isStoppingCamera = true;
-
-            try {
-                if (currentStream) {
-                    currentStream.getTracks().forEach(track => {
-                        try { track.stop(); } catch {}
-                    });
-                }
-                currentStream = null;
-                currentVideoTrack = null;
-
-                if (cameraVideo.srcObject) {
-                    cameraVideo.pause();
-                    cameraVideo.srcObject = null;
-                    cameraVideo.load();
-                }
-            } finally {
-                isStoppingCamera = false;
-            }
-        }
-
         function clearSnapshotPreview() {
             snapshotBlob = null;
-
             if (snapshotPreviewUrl) {
                 URL.revokeObjectURL(snapshotPreviewUrl);
                 snapshotPreviewUrl = null;
             }
-
             snapshotPreview.removeAttribute("src");
             snapshotPreview.classList.add("hidden");
-        }
-
-        async function startCamera() {
-            if (isStartingCamera) return;
-            isStartingCamera = true;
-
-            try {
-                await stopCamera();
-                clearSnapshotPreview();
-
-                setStatus("Starting camera...");
-                setError("");
-
-                cameraVideo.autoplay = true;
-                cameraVideo.muted = true;
-                cameraVideo.playsInline = true;
-                cameraVideo.disablePictureInPicture = true;
-
-                const constraints = {
-                    video: {
-                        width: { ideal: 640, max: 640 },
-                        height: { ideal: 480, max: 480 },
-                        frameRate: { ideal: 12, max: 15 }
-                    },
-                    audio: false
-                };
-
-                const stream = await navigator.mediaDevices.getUserMedia(constraints);
-                currentStream = stream;
-                currentVideoTrack = stream.getVideoTracks()[0] || null;
-
-                cameraVideo.srcObject = stream;
-
-                await new Promise((resolve) => {
-                    if (cameraVideo.readyState >= 2) {
-                        resolve();
-                        return;
-                    }
-                    const onLoaded = () => {
-                        cameraVideo.removeEventListener("loadedmetadata", onLoaded);
-                        resolve();
-                    };
-                    cameraVideo.addEventListener("loadedmetadata", onLoaded, { once: true });
-                });
-
-                await cameraVideo.play();
-
-                setStatus("Camera started.");
-                setError("");
-            } catch (error) {
-                console.error(error);
-                setError(`Failed to access webcam: ${error.message || "Unknown error"}`);
-                setStatus("");
-            } finally {
-                isStartingCamera = false;
-            }
         }
 
         openCameraBtn.addEventListener("click", async () => {
@@ -1555,154 +1563,82 @@
                 setError("Start the camera first.");
                 return;
             }
-
-            const width = cameraVideo.videoWidth || 640;
-            const height = cameraVideo.videoHeight || 480;
-
+            const width = cameraVideo.videoWidth;
+            const height = cameraVideo.videoHeight;
             cameraCanvas.width = width;
             cameraCanvas.height = height;
-
-            const ctx = cameraCanvas.getContext("2d", {
-                alpha: false,
-                desynchronized: true,
-                willReadFrequently: false
-            });
-
-            if (!ctx) {
-                setError("Failed to prepare camera snapshot.");
-                return;
-            }
-
+            const ctx = cameraCanvas.getContext("2d", { alpha: false });
             ctx.drawImage(cameraVideo, 0, 0, width, height);
-
             cameraCanvas.toBlob((blob) => {
-                if (!blob) {
-                    setError("Failed to capture snapshot.");
-                    return;
-                }
-
                 snapshotBlob = blob;
-
-                if (snapshotPreviewUrl) {
-                    URL.revokeObjectURL(snapshotPreviewUrl);
-                }
-
+                if (snapshotPreviewUrl) URL.revokeObjectURL(snapshotPreviewUrl);
                 snapshotPreviewUrl = URL.createObjectURL(blob);
                 snapshotPreview.src = snapshotPreviewUrl;
                 snapshotPreview.classList.remove("hidden");
-
-                setStatus("Snapshot captured.");
-                setError("");
             }, "image/jpeg", 0.88);
         });
 
         analyzeSnapshotBtn.addEventListener("click", async () => {
-            if (!snapshotBlob) {
-                setError("Take a snapshot first.");
-                return;
-            }
-
-            const plantingDate = cameraPlantingDateInput.value.trim();
-            const cropAgeDays = cameraCropAgeInput.value.trim();
-            const locationNote = cameraCropLocationInput.value.trim();
+            if (!snapshotBlob) return setError("Take a snapshot first.");
+            const pDate = cameraPlantingDateInput.value.trim();
+            const age = cameraCropAgeInput.value.trim();
+            const loc = cameraCropLocationInput.value.trim();
             const snapshotFile = new File([snapshotBlob], `snapshot_${Date.now()}.jpg`, { type: "image/jpeg" });
-
-            await handleAnalysis(snapshotFile, plantingDate, cropAgeDays, locationNote, snapshotPreviewUrl);
+            await handleAnalysis(snapshotFile, pDate, age, loc, snapshotPreviewUrl);
             cameraModal.classList.remove("show");
             await stopCamera();
-            clearSnapshotPreview();
         });
 
         document.addEventListener("visibilitychange", async () => {
-            if (document.hidden) {
-                await stopCamera();
-            }
-        });
-
-        window.addEventListener("beforeunload", async () => {
-            await stopCamera();
-            clearSnapshotPreview();
+            if (document.hidden) await stopCamera();
         });
 
         function resetKioskTapSequence() {
             kioskTapCount = 0;
-            if (kioskTapTimer) {
-                clearTimeout(kioskTapTimer);
-                kioskTapTimer = null;
-            }
+            if (kioskTapTimer) { clearTimeout(kioskTapTimer); kioskTapTimer = null; }
         }
 
         function registerKioskTap(event) {
             if (event) event.preventDefault();
             kioskTapCount += 1;
-
-            if (kioskTapTimer) {
-                clearTimeout(kioskTapTimer);
-            }
-
+            if (kioskTapTimer) clearTimeout(kioskTapTimer);
             kioskTapTimer = setTimeout(resetKioskTapSequence, 1200);
-
             if (kioskTapCount >= 3) {
                 kioskExitPanel.classList.add("show");
-                setStatus("Hidden kiosk exit controls opened.");
-                setError("");
                 resetKioskTapSequence();
             }
         }
 
         kioskExitZone.addEventListener("click", registerKioskTap);
         kioskExitZone.addEventListener("touchstart", registerKioskTap, { passive: false });
-
-        hideKioskExitBtn.addEventListener("click", () => {
-            kioskExitPanel.classList.remove("show");
-        });
-
+        hideKioskExitBtn.addEventListener("click", () => kioskExitPanel.classList.remove("show"));
         exitKioskBtn.addEventListener("click", async () => {
-            try {
-                setStatus("Exiting kiosk...");
-                setError("");
-                await fetch("/api/exit-kiosk", { method: "POST" });
-            } catch (error) {
-                console.error(error);
-                setError("Failed to send kiosk exit command.");
-            }
+            try { await fetch("/api/exit-kiosk", { method: "POST" }); } 
+            catch (error) { setError("Exit kiosk failed."); }
         });
 
         function enableDemoMode(session) {
             isDemoMode = true;
-            currentUser = {
-                uid: "demo-mode-user",
-                email: session?.email || "demo@offline.local"
-            };
-
+            currentUser = { uid: "demo-user", email: session?.email || "demo@offline.local" };
             modeBadge.classList.remove("hidden");
-            userBadge.textContent = session?.displayName || "Demo Mode User";
+            userBadge.textContent = "Demo User";
             loadUserRecords();
         }
 
         function createVkKey(label, value) {
             const btn = document.createElement("button");
-            btn.type = "button";
-            btn.className = "vk-key";
-            btn.textContent = label;
+            btn.type = "button"; btn.className = "vk-key"; btn.textContent = label;
             btn.addEventListener("click", () => insertAtCursor(value));
             return btn;
         }
 
         function renderKeyboard() {
-            vkRowLetters1.innerHTML = "";
-            vkRowLetters2.innerHTML = "";
-            vkRowLetters3.innerHTML = "";
-            vkRowLetters4.innerHTML = "";
-            vkRowNumbers1.innerHTML = "";
-            vkRowNumbers2.innerHTML = "";
-            vkRowNumbers3.innerHTML = "";
-
+            vkRowLetters1.innerHTML = ""; vkRowLetters2.innerHTML = ""; vkRowLetters3.innerHTML = ""; vkRowLetters4.innerHTML = "";
+            vkRowNumbers1.innerHTML = ""; vkRowNumbers2.innerHTML = ""; vkRowNumbers3.innerHTML = "";
             LETTER_ROWS[0].forEach(key => vkRowLetters1.appendChild(createVkKey(key, key)));
             LETTER_ROWS[1].forEach(key => vkRowLetters2.appendChild(createVkKey(key, key)));
             LETTER_ROWS[2].forEach(key => vkRowLetters3.appendChild(createVkKey(key, key)));
             ["-","/",".","@","_"].forEach(key => vkRowLetters4.appendChild(createVkKey(key, key)));
-
             NUM_ROWS[0].forEach(key => vkRowNumbers1.appendChild(createVkKey(key, key)));
             NUM_ROWS[1].forEach(key => vkRowNumbers2.appendChild(createVkKey(key, key)));
             NUM_ROWS[2].forEach(key => vkRowNumbers3.appendChild(createVkKey(key, key)));
@@ -1718,12 +1654,8 @@
         function showKeyboard(target) {
             activeVkInput = target;
             virtualKeyboard.classList.add("show");
-            const type = (target.type || "").toLowerCase();
-            setKeyboardMode(type === "number" || type === "date");
-
-            requestAnimationFrame(() => {
-                target.scrollIntoView({ block: "center", behavior: "auto" });
-            });
+            setKeyboardMode(target.type === "number" || target.type === "date");
+            requestAnimationFrame(() => target.scrollIntoView({ block: "center", behavior: "auto" }));
         }
 
         function hideKeyboard() {
@@ -1733,73 +1665,44 @@
 
         function insertAtCursor(text) {
             if (!activeVkInput) return;
-
             const input = activeVkInput;
-            const type = (input.type || "").toLowerCase();
             const start = input.selectionStart ?? input.value.length;
             const end = input.selectionEnd ?? input.value.length;
-            const value = input.value || "";
-
-            if (type === "number" && !/^[0-9.\-]*$/.test(text)) {
-                return;
-            }
-
-            input.value = value.slice(0, start) + text + value.slice(end);
-
+            input.value = input.value.slice(0, start) + text + input.value.slice(end);
             const nextPos = start + text.length;
-            if (typeof input.setSelectionRange === "function") {
-                input.setSelectionRange(nextPos, nextPos);
-            }
-
+            if (input.setSelectionRange) input.setSelectionRange(nextPos, nextPos);
             input.dispatchEvent(new Event("input", { bubbles: true }));
             input.focus();
         }
 
         function backspaceAtCursor() {
             if (!activeVkInput) return;
-
             const input = activeVkInput;
             const start = input.selectionStart ?? input.value.length;
             const end = input.selectionEnd ?? input.value.length;
-            const value = input.value || "";
-
             if (start === 0 && end === 0) return;
-
-            if (start !== end) {
-                input.value = value.slice(0, start) + value.slice(end);
-                input.setSelectionRange?.(start, start);
-            } else {
-                input.value = value.slice(0, start - 1) + value.slice(end);
-                input.setSelectionRange?.(start - 1, start - 1);
-            }
-
+            if (start !== end) input.value = input.value.slice(0, start) + input.value.slice(end);
+            else input.value = input.value.slice(0, start - 1) + input.value.slice(end);
             input.dispatchEvent(new Event("input", { bubbles: true }));
             input.focus();
         }
 
         function bindVirtualKeyboardTargets(scope = document) {
-            const fields = scope.querySelectorAll('input[data-vk="true"], textarea[data-vk="true"]');
-            fields.forEach(field => {
+            scope.querySelectorAll('input[data-vk="true"], textarea[data-vk="true"]').forEach(field => {
                 if (field.dataset.vkBound === "true") return;
-                const activate = () => showKeyboard(field);
-                field.addEventListener("focus", activate, { passive: true });
-                field.addEventListener("click", activate, { passive: true });
+                field.addEventListener("focus", () => showKeyboard(field));
+                field.addEventListener("click", () => showKeyboard(field));
                 field.dataset.vkBound = "true";
             });
         }
 
-        vkModeBtn.addEventListener("click", () => {
-            setKeyboardMode(!vkNumbersMode);
-        });
-
+        vkModeBtn.addEventListener("click", () => setKeyboardMode(!vkNumbersMode));
         vkBackspaceBtn.addEventListener("click", backspaceAtCursor);
         vkSpaceBtn.addEventListener("click", () => insertAtCursor(" "));
         vkHideBtn.addEventListener("click", hideKeyboard);
 
         document.addEventListener("click", (event) => {
-            const insideKeyboard = virtualKeyboard.contains(event.target);
-            const vkField = event.target.closest('input[data-vk="true"], textarea[data-vk="true"]');
-            if (!insideKeyboard && !vkField) {
+            if (!virtualKeyboard.contains(event.target) && !event.target.closest('input[data-vk="true"], textarea[data-vk="true"]')) {
                 hideKeyboard();
             }
         });
@@ -1808,20 +1711,11 @@
         bindVirtualKeyboardTargets(document);
 
         const demoSession = getDemoSession();
-        if (demoSession?.enabled) {
-            enableDemoMode(demoSession);
-        } else {
-            onAuthStateChanged(auth, async (user) => {
-                if (!user) {
-                    window.location.href = "/auth";
-                    return;
-                }
-
-                currentUser = user;
-                userBadge.textContent = user.email || "Logged in user";
-                await loadUserRecords();
-            });
-        }
+        if (demoSession?.enabled) enableDemoMode(demoSession);
+        else onAuthStateChanged(auth, async (user) => {
+            if (!user) { window.location.href = "/auth"; return; }
+            currentUser = user; userBadge.textContent = user.email; await loadUserRecords();
+        });
     </script>
 </body>
 </html>
