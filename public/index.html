@@ -756,7 +756,8 @@
 
             <div class="camera-controls">
                 <button type="button" class="btn btn-green" id="startCameraBtn">Start Camera</button>
-                <button type="button" class="btn btn-blue" id="flipCameraBtn">Flip Camera</button><button type="button" class="btn btn-blue" id="takePhotoBtn">Take Snapshot</button>
+                <button type="button" class="btn btn-blue" id="flipCameraBtn">Flip Camera</button>
+                <button type="button" class="btn btn-blue" id="takePhotoBtn">Take Snapshot</button>
                 <button type="button" class="btn btn-green" id="analyzeSnapshotBtn">Analyze Snapshot</button>
             </div>
         </div>
@@ -893,8 +894,8 @@
             [",","?","!","#","+"]
         ];
 
-        // --- UPDATED DYNAMIC CAMERA LOGIC ---
-        let useBackCamera = true; // State to track camera choice
+        // --- CAMERA FLIP LOGIC ---
+        let useBackCamera = true; 
         const flipCameraBtn = document.getElementById("flipCameraBtn");
 
         async function startCamera() {
@@ -902,17 +903,17 @@
             isStartingCamera = true;
 
             try {
-                // 1. Fully release the current camera hardware
+                // 1. Fully release hardware before switching
                 await stopCamera();
                 clearSnapshotPreview();
                 setStatus("Accessing camera...");
+                setError("");
 
-                // 2. Define facing mode: 'environment' (back) or 'user' (front)
+                // 2. Define facing mode dynamically
                 const mode = useBackCamera ? "environment" : "user";
 
                 const constraints = {
                     video: {
-                        // 'ideal' allows for fallback if the specific lens is unavailable
                         facingMode: { ideal: mode }, 
                         width: { ideal: 1280 },
                         height: { ideal: 720 }
@@ -920,27 +921,39 @@
                     audio: false
                 };
 
-                // 3. Request the new stream with the updated mode
+                // 3. Request stream with new mode
                 const stream = await navigator.mediaDevices.getUserMedia(constraints);
                 currentStream = stream;
+                currentVideoTrack = stream.getVideoTracks()[0] || null;
                 cameraVideo.srcObject = stream;
                 
-                // 4. Play the new stream
-                cameraVideo.onloadedmetadata = () => cameraVideo.play();
+                await new Promise((resolve) => {
+                    if (cameraVideo.readyState >= 2) {
+                        resolve();
+                        return;
+                    }
+                    const onLoaded = () => {
+                        cameraVideo.removeEventListener("loadedmetadata", onLoaded);
+                        resolve();
+                    };
+                    cameraVideo.addEventListener("loadedmetadata", onLoaded, { once: true });
+                });
+
+                await cameraVideo.play();
                 setStatus(`${useBackCamera ? "Back" : "Front"} camera active.`);
+                setError("");
             } catch (error) {
-                console.error("Flip error:", error);
+                console.error("Camera error:", error);
                 setError("Camera switch failed. Using default camera.");
-                // Fallback to basic camera if specific mode fails
                 const stream = await navigator.mediaDevices.getUserMedia({ video: true });
                 currentStream = stream;
                 cameraVideo.srcObject = stream;
+                await cameraVideo.play();
             } finally {
                 isStartingCamera = false;
             }
         }
 
-        // 5. Flip Button Listener: Toggles state and restarts stream
         if (flipCameraBtn) {
             flipCameraBtn.addEventListener("click", async () => {
                 useBackCamera = !useBackCamera; 
@@ -1533,62 +1546,6 @@
 
             snapshotPreview.removeAttribute("src");
             snapshotPreview.classList.add("hidden");
-        }
-
-        async function startCamera() {
-            if (isStartingCamera) return;
-            isStartingCamera = true;
-
-            try {
-                await stopCamera();
-                clearSnapshotPreview();
-
-                setStatus("Starting camera...");
-                setError("");
-
-                cameraVideo.autoplay = true;
-                cameraVideo.muted = true;
-                cameraVideo.playsInline = true;
-                cameraVideo.disablePictureInPicture = true;
-
-                const constraints = {
-                    video: {
-                        width: { ideal: 640, max: 640 },
-                        height: { ideal: 480, max: 480 },
-                        frameRate: { ideal: 12, max: 15 }
-                    },
-                    audio: false
-                };
-
-                const stream = await navigator.mediaDevices.getUserMedia(constraints);
-                currentStream = stream;
-                currentVideoTrack = stream.getVideoTracks()[0] || null;
-
-                cameraVideo.srcObject = stream;
-
-                await new Promise((resolve) => {
-                    if (cameraVideo.readyState >= 2) {
-                        resolve();
-                        return;
-                    }
-                    const onLoaded = () => {
-                        cameraVideo.removeEventListener("loadedmetadata", onLoaded);
-                        resolve();
-                    };
-                    cameraVideo.addEventListener("loadedmetadata", onLoaded, { once: true });
-                });
-
-                await cameraVideo.play();
-
-                setStatus("Camera started.");
-                setError("");
-            } catch (error) {
-                console.error(error);
-                setError(`Failed to access webcam: ${error.message || "Unknown error"}`);
-                setStatus("");
-            } finally {
-                isStartingCamera = false;
-            }
         }
 
         openCameraBtn.addEventListener("click", async () => {
