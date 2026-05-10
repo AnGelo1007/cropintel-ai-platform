@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard | Crop Health Evaluation</title>
+    <title>Dashboard | Crop Intel</title>
     <style>
         :root {
             --bg: #eef3f9;
@@ -894,7 +894,7 @@
         ];
 
         // --- UPDATED DYNAMIC CAMERA LOGIC ---
-        let useBackCamera = true; 
+        let useBackCamera = true; // State to track camera choice
         const flipCameraBtn = document.getElementById("flipCameraBtn");
 
         async function startCamera() {
@@ -905,7 +905,7 @@
                 // 1. Fully release the current camera hardware
                 await stopCamera();
                 clearSnapshotPreview();
-                setStatus("Switching camera...");
+                setStatus("Accessing camera...");
 
                 // 2. Define facing mode: 'environment' (back) or 'user' (front)
                 const mode = useBackCamera ? "environment" : "user";
@@ -930,7 +930,7 @@
                 setStatus(`${useBackCamera ? "Back" : "Front"} camera active.`);
             } catch (error) {
                 console.error("Flip error:", error);
-                setError("Camera switch failed. Retrying with default...");
+                setError("Camera switch failed. Using default camera.");
                 // Fallback to basic camera if specific mode fails
                 const stream = await navigator.mediaDevices.getUserMedia({ video: true });
                 currentStream = stream;
@@ -941,10 +941,13 @@
         }
 
         // 5. Flip Button Listener: Toggles state and restarts stream
-        flipCameraBtn.addEventListener("click", async () => {
-            useBackCamera = !useBackCamera; 
-            await startCamera(); 
-        });
+        if (flipCameraBtn) {
+            flipCameraBtn.addEventListener("click", async () => {
+                useBackCamera = !useBackCamera; 
+                await startCamera(); 
+            });
+        }
+
         function setText(el, value) {
             const next = String(value ?? "");
             if (el.textContent !== next) el.textContent = next;
