@@ -1,0 +1,82 @@
+:root {
+  --bg: #f5f8fc;
+  --card: #ffffff;
+  --text: #17324d;
+  --muted: #5f7894;
+  --accent: #1f7a45;
+  --accent-2: #2d8cff;
+  --border: #dce7f2;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+.hero {
+  padding: 28px 20px 18px;
+  background: linear-gradient(135deg, #edf5ff, #f8fbff);
+  border-bottom: 1px solid var(--border);
+}
+.hero h1 { margin: 8px 0; font-size: 1.9rem; line-height: 1.15; }
+.eyebrow { text-transform: uppercase; letter-spacing: .12em; color: var(--accent-2); font-size: .78rem; font-weight: bold; }
+.sub { max-width: 760px; color: var(--muted); }
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  padding: 18px;
+}
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 0 8px 24px rgba(28, 62, 105, 0.06);
+}
+.full-width { grid-column: 1 / -1; }
+input[type=file] { width: 100%; padding: 10px; border: 1px dashed var(--border); border-radius: 12px; background: #fbfdff; }
+button {
+  margin-top: 12px;
+  border: 0;
+  background: var(--accent);
+  color: white;
+  padding: 11px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 700;
+}
+button.secondary { background: var(--accent-2); margin-top: 0; }
+.preview img {
+  width: 100%;
+  max-height: 300px;
+  object-fit: cover;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  margin-top: 14px;
+}
+.hidden { display: none; }
+.placeholder, .metric, table { font-size: .98rem; }
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+}
+.metric {
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: #fbfdff;
+}
+.metric strong { display: block; font-size: .8rem; color: var(--muted); margin-bottom: 6px; }
+.row-between { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+table { width: 100%; border-collapse: collapse; }
+th, td { border-bottom: 1px solid var(--border); padding: 10px 8px; text-align: left; }
+.hint { color: var(--muted); }
+.status-Healthy { color: #156c36; font-weight: 700; }
+.status-Moderate { color: #b26c00; font-weight: 700; }
+.status-Stressed { color: #b42318; font-weight: 700; }
+@media (max-width: 600px) {
+  .hero h1 { font-size: 1.35rem; }
+}

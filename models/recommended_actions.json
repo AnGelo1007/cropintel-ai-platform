@@ -1,0 +1,45 @@
+{
+  "healthy": {
+    "summary": "The crop appears healthy.",
+    "recommended_actions": [
+      "Continue the current good cultivation practices.",
+      "Maintain proper watering and fertilization schedule.",
+      "Keep monitoring for early signs of pests or disease.",
+      "Continue regular field sanitation and inspection.",
+      "Harvest at the proper maturity stage."
+    ]
+  },
+  "unhealthy": {
+    "summary": "The crop appears unhealthy and may show signs of disease, pests, or nutrient deficiency.",
+    "recommended_actions": [
+      "Inspect the crop closely for visible lesions, discoloration, rot, or pest damage.",
+      "Remove severely damaged or infected crop samples when necessary.",
+      "Check for pest presence and apply the appropriate pest management method.",
+      "Review fertilizer application and correct possible nutrient deficiency.",
+      "Adjust irrigation if the crop is affected by too much or too little water.",
+      "Consult an agricultural technician or local expert for further validation if symptoms persist."
+    ]
+  },
+  "crop_specific_notes": {
+    "tomato": [
+      "Watch for rotting, cracking, black spots, and discoloration.",
+      "Avoid excess moisture that may increase disease development."
+    ],
+    "pepper": [
+      "Watch for wrinkling, holes, soft rot, and surface lesions.",
+      "Check for insect feeding damage and fungal symptoms."
+    ],
+    "eggplant": [
+      "Watch for holes, scars, dark lesions, and deformities.",
+      "Monitor for insect damage and fruit surface discoloration."
+    ],
+    "corn": [
+      "Check kernels or ears for mold, rot, and insect damage.",
+      "Keep drying and storage conditions proper after harvest."
+    ],
+    "rice": [
+      "Check grains for discoloration, pest damage, and poor grain filling.",
+      "Monitor moisture conditions during storage and post-harvest handling."
+    ]
+  }
+}

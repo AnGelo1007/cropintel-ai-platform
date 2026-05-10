@@ -1,0 +1,1827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Crop Health Evaluation</title>
+    <style>
+        :root {
+            --bg: #eef3f9;
+            --text: #12345a;
+            --muted: #5a7193;
+            --border: #d9e2ef;
+            --card: #ffffff;
+            --soft: #f8fbff;
+            --soft2: #fbfdff;
+            --danger: #dc2626;
+            --blue: #3b82f6;
+            --green: #18803a;
+            --gray: #64748b;
+            --orange: #ea580c;
+            --teal: #0f766e;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html {
+            scroll-behavior: auto;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            padding: 0;
+            overflow-x: hidden;
+            overscroll-behavior: none;
+            text-rendering: optimizeSpeed;
+        }
+
+        img,
+        video,
+        canvas {
+            display: block;
+            max-width: 100%;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 16px 12px 220px;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+        }
+
+        h1 {
+            font-size: 28px;
+            line-height: 1.08;
+            margin-bottom: 6px;
+            font-weight: 800;
+            color: var(--text);
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: var(--muted);
+        }
+
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .user-badge {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            padding: 8px 12px;
+            font-size: 12px;
+            color: #23456b;
+        }
+
+        .mode-badge {
+            background: #fff7ed;
+            border: 1px solid #fdba74;
+            color: #9a3412;
+            border-radius: 999px;
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1.05fr;
+            gap: 12px;
+            margin-bottom: 12px;
+            align-items: start;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 16px 14px;
+            contain: content;
+            box-shadow: 0 1px 2px rgba(18, 52, 90, 0.03);
+        }
+
+        .card h2 {
+            font-size: 21px;
+            margin-bottom: 12px;
+            color: var(--text);
+        }
+
+        .upload-box {
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 10px;
+            margin-bottom: 12px;
+            background: var(--soft2);
+        }
+
+        input[type="file"],
+        input[type="date"],
+        input[type="number"],
+        input[type="text"],
+        input[type="password"],
+        input[type="email"],
+        textarea,
+        select {
+            font-size: 16px;
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: white;
+            color: var(--text);
+            outline: none;
+            appearance: none;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            border-color: #8eb3f0;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.08);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 72px;
+        }
+
+        .field-block {
+            margin-bottom: 10px;
+        }
+
+        .field-block label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .field-help {
+            margin-top: 4px;
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .field-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .btn {
+            display: inline-block;
+            border: none;
+            border-radius: 12px;
+            padding: 10px 16px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 8px;
+            margin-right: 8px;
+            transition: transform 0.04s ease;
+        }
+
+        .btn:active,
+        .small-btn:active,
+        .vk-key:active,
+        .vk-control-btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-green { background: var(--green); color: white; }
+        .btn-blue { background: var(--blue); color: white; }
+        .btn-red { background: var(--danger); color: white; }
+        .btn-gray { background: var(--gray); color: white; }
+
+        .help-text {
+            margin-top: 12px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .records-card {
+            margin-top: 6px;
+            content-visibility: auto;
+            contain-intrinsic-size: 700px;
+        }
+
+        .records-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .records-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .search-wrap {
+            margin-bottom: 10px;
+        }
+
+        .records-list {
+            display: grid;
+            gap: 10px;
+        }
+
+        .records-list.scrollable {
+            max-height: 320px;
+            overflow-y: auto;
+            padding-right: 4px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .record-item {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 10px;
+            background: var(--soft2);
+            display: grid;
+            grid-template-columns: 90px 1fr auto;
+            gap: 10px;
+            align-items: center;
+            contain: content;
+        }
+
+        .record-thumb {
+            width: 90px;
+            height: 90px;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--bg);
+        }
+
+        .record-meta {
+            color: #23456b;
+            font-size: 12px;
+            line-height: 1.45;
+        }
+
+        .record-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .small-btn {
+            border: none;
+            border-radius: 9px;
+            padding: 8px 10px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            color: white;
+        }
+
+        .review-btn { background: #2563eb; }
+        .delete-btn { background: var(--danger); }
+        .edit-btn { background: var(--teal); }
+        .update-btn { background: var(--orange); }
+        .save-btn { background: #15803d; }
+        .cancel-btn { background: var(--gray); }
+
+        .location-edit-box {
+            margin-top: 6px;
+        }
+
+        .location-edit-box textarea {
+            min-height: 54px;
+        }
+
+        .inline-actions {
+            display: flex;
+            gap: 6px;
+            margin-top: 6px;
+            flex-wrap: wrap;
+        }
+
+        .result-placeholder {
+            color: var(--text);
+            font-size: 16px;
+        }
+
+        .result-image {
+            width: 100%;
+            max-width: 200px;
+            max-height: 140px;
+            border-radius: 12px;
+            margin: 0 auto 10px;
+            border: 1px solid var(--border);
+            object-fit: contain;
+            background: var(--soft);
+            contain: content;
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .result-pill {
+            background: #f5f8fd;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px;
+            font-size: 12px;
+        }
+
+        .section-box {
+            margin-top: 10px;
+            padding: 10px;
+            background: var(--soft);
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            color: #23456b;
+            font-size: 12px;
+            contain: content;
+        }
+
+        .section-box h3 {
+            font-size: 15px;
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+
+        .section-box ul {
+            margin-left: 16px;
+            line-height: 1.5;
+        }
+
+        .status {
+            margin-top: 10px;
+            font-size: 13px;
+            color: #23456b;
+            white-space: pre-wrap;
+            min-height: 18px;
+        }
+
+        .error {
+            margin-top: 8px;
+            color: #b91c1c;
+            font-weight: 700;
+            font-size: 13px;
+            white-space: pre-wrap;
+            min-height: 18px;
+        }
+
+        .editing-banner {
+            background: #fff7ed;
+            border: 1px solid #fdba74;
+            color: #9a3412;
+            border-radius: 12px;
+            padding: 10px;
+            margin-bottom: 12px;
+            display: none;
+            font-size: 12px;
+        }
+
+        .editing-banner.show {
+            display: block;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 999;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            contain: strict;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            width: min(920px, 100%);
+            max-height: 94vh;
+            overflow-y: auto;
+            background: white;
+            border-radius: 18px;
+            padding: 14px;
+            contain: content;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            gap: 10px;
+        }
+
+        .camera-wrap {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            align-items: start;
+        }
+
+        #cameraVideo,
+        #snapshotPreview {
+            width: 100%;
+            min-height: 220px;
+            height: 220px;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            background: #111827;
+            object-fit: cover;
+            display: block;
+            transform: translateZ(0);
+            backface-visibility: hidden;
+            will-change: transform;
+        }
+
+        #cameraCanvas {
+            display: none;
+        }
+
+        .camera-controls {
+            margin-top: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .kiosk-exit-zone {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 80px;
+            height: 80px;
+            z-index: 3000;
+            background: transparent;
+        }
+
+        .kiosk-exit-panel {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            z-index: 3001;
+            background: rgba(18, 52, 90, 0.96);
+            color: white;
+            border-radius: 12px;
+            padding: 10px;
+            min-width: 150px;
+            display: none;
+        }
+
+        .kiosk-exit-panel.show {
+            display: block;
+        }
+
+        .kiosk-exit-panel p {
+            font-size: 12px;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .kiosk-exit-panel .small-btn {
+            margin-right: 6px;
+            margin-bottom: 4px;
+        }
+
+        .vk-container {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 5000;
+            background: #dde6f2;
+            border-top: 1px solid #c9d5e5;
+            padding: 8px 8px 10px;
+            display: none;
+            contain: content;
+            transform: translateZ(0);
+        }
+
+        .vk-container.show {
+            display: block;
+        }
+
+        .vk-topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+            flex-wrap: wrap;
+        }
+
+        .vk-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #2d4668;
+        }
+
+        .vk-controls {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .vk-control-btn {
+            border: none;
+            border-radius: 8px;
+            background: #64748b;
+            color: white;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 7px 10px;
+            cursor: pointer;
+        }
+
+        .vk-row {
+            display: grid;
+            gap: 6px;
+            margin-bottom: 6px;
+        }
+
+        .vk-row.row-10 { grid-template-columns: repeat(10, 1fr); }
+        .vk-row.row-9 { grid-template-columns: repeat(9, 1fr); }
+        .vk-row.row-7 { grid-template-columns: repeat(7, 1fr); }
+        .vk-row.row-5 { grid-template-columns: repeat(5, 1fr); }
+
+        .vk-key {
+            border: 1px solid #bccbdd;
+            background: #ffffff;
+            border-radius: 10px;
+            min-height: 42px;
+            font-size: 18px;
+            font-weight: 700;
+            color: #223d60;
+            cursor: pointer;
+        }
+
+        @media (max-width: 900px) {
+            .grid,
+            .camera-wrap,
+            .result-grid,
+            .field-grid {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 22px;
+            }
+
+            .record-item {
+                grid-template-columns: 1fr;
+            }
+
+            .record-thumb {
+                width: 100%;
+                height: auto;
+                max-height: 180px;
+            }
+
+            .record-actions {
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+
+            .container {
+                padding: 10px 8px 230px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="kiosk-exit-zone" id="kioskExitZone"></div>
+
+    <div class="kiosk-exit-panel" id="kioskExitPanel">
+        <p>Exit kiosk controls</p>
+        <button type="button" class="small-btn delete-btn" id="exitKioskBtn">Exit Kiosk</button>
+        <button type="button" class="small-btn cancel-btn" id="hideKioskExitBtn">Hide</button>
+    </div>
+
+    <div class="container">
+        <div class="topbar">
+            <div>
+                <h1>Crop Health Evaluation Dashboard</h1>
+                <div class="subtitle">Analyze crop images, track crop progress, and manage saved records.</div>
+            </div>
+
+            <div class="topbar-actions">
+                <div id="modeBadge" class="mode-badge hidden">Demo Mode</div>
+                <div id="userBadge" class="user-badge">Checking session...</div>
+                <button type="button" class="btn btn-red" id="logoutBtn">Log Out</button>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h2>Analyze Crop Image</h2>
+
+                <div id="editingBanner" class="editing-banner">
+                    <strong>Update Mode</strong>
+                    <span id="editingBannerText">You are updating a saved crop record.</span>
+                    <div class="inline-actions">
+                        <button type="button" class="small-btn cancel-btn" id="cancelUpdateBtn">Cancel Update</button>
+                    </div>
+                </div>
+
+                <form id="uploadForm">
+                    <div class="upload-box">
+                        <input type="file" id="imageInput" name="image" accept="image/*" required>
+                    </div>
+
+                    <div class="field-grid">
+                        <div class="field-block">
+                            <label for="plantingDateInput">Planting Date</label>
+                            <input type="date" id="plantingDateInput" data-vk="true">
+                            <div class="field-help">Enter the planting date for more accurate stage and forecast.</div>
+                        </div>
+
+                        <div class="field-block">
+                            <label for="cropAgeInput">Crop Age (days)</label>
+                            <input type="number" id="cropAgeInput" min="0" placeholder="Auto-computed from planting date" data-vk="true">
+                            <div class="field-help">You may also enter crop age manually.</div>
+                        </div>
+                    </div>
+
+                    <div class="field-block">
+                        <label for="cropLocationInput">Crop Location / Position Note</label>
+                        <textarea id="cropLocationInput" placeholder="Example: 2nd eggplant at the left side near the fence" data-vk="true"></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-green" id="analyzeBtn">Run Analysis</button>
+                </form>
+
+                <button type="button" class="btn btn-green" id="openCameraBtn">Capture from Webcam</button>
+
+                <div class="help-text">
+                    Use a clear crop image with good lighting and less background clutter.
+                </div>
+
+                <div class="status" id="statusText"></div>
+                <div class="error" id="errorText"></div>
+            </div>
+
+            <div class="card">
+                <h2>Latest Result</h2>
+                <div id="latestResult" class="result-placeholder">Upload an image or use the webcam to start.</div>
+            </div>
+        </div>
+
+        <div class="card records-card">
+            <div class="records-header">
+                <h2>Recent Records</h2>
+                <div class="records-actions">
+                    <button type="button" class="btn btn-blue" id="refreshBtn">Refresh</button>
+                    <button type="button" class="btn btn-gray" id="clearHistoryBtn">Clear History</button>
+                </div>
+            </div>
+
+            <div class="search-wrap">
+                <input type="text" id="recordSearchInput" placeholder="Search by crop, location, planting date, crop age, health, or stage..." data-vk="true">
+            </div>
+
+            <div id="recordsList" class="records-list">
+                <div>Loading records...</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="cameraModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Live Webcam Preview</h3>
+                <button type="button" class="btn btn-red" id="closeCameraBtn">Close</button>
+            </div>
+
+            <div class="field-grid">
+                <div class="field-block">
+                    <label for="cameraPlantingDateInput">Planting Date</label>
+                    <input type="date" id="cameraPlantingDateInput" data-vk="true">
+                </div>
+
+                <div class="field-block">
+                    <label for="cameraCropAgeInput">Crop Age (days)</label>
+                    <input type="number" id="cameraCropAgeInput" min="0" placeholder="Auto-computed from planting date" data-vk="true">
+                </div>
+            </div>
+
+            <div class="field-block">
+                <label for="cameraCropLocationInput">Crop Location / Position Note</label>
+                <textarea id="cameraCropLocationInput" placeholder="Example: crop near the gate or right side row" data-vk="true"></textarea>
+            </div>
+
+            <div class="camera-wrap">
+                <div>
+                    <video id="cameraVideo" autoplay playsinline muted></video>
+                </div>
+                <div>
+                    <canvas id="cameraCanvas"></canvas>
+                    <img id="snapshotPreview" class="hidden" alt="Snapshot preview">
+                </div>
+            </div>
+
+            <div class="camera-controls">
+                <button type="button" class="btn btn-green" id="startCameraBtn">Start Camera</button>
+                <button type="button" class="btn btn-blue" id="takePhotoBtn">Take Snapshot</button>
+                <button type="button" class="btn btn-green" id="analyzeSnapshotBtn">Analyze Snapshot</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="virtualKeyboard" class="vk-container">
+        <div class="vk-topbar">
+            <div class="vk-title">Touch Keyboard</div>
+            <div class="vk-controls">
+                <button type="button" class="vk-control-btn" id="vkModeBtn">123</button>
+                <button type="button" class="vk-control-btn" id="vkBackspaceBtn">⌫</button>
+                <button type="button" class="vk-control-btn" id="vkSpaceBtn">Space</button>
+                <button type="button" class="vk-control-btn" id="vkHideBtn">Hide</button>
+            </div>
+        </div>
+
+        <div id="vkLettersWrap">
+            <div class="vk-row row-10" id="vkRowLetters1"></div>
+            <div class="vk-row row-9" id="vkRowLetters2"></div>
+            <div class="vk-row row-7" id="vkRowLetters3"></div>
+            <div class="vk-row row-5" id="vkRowLetters4"></div>
+        </div>
+
+        <div id="vkNumbersWrap" class="hidden">
+            <div class="vk-row row-10" id="vkRowNumbers1"></div>
+            <div class="vk-row row-10" id="vkRowNumbers2"></div>
+            <div class="vk-row row-5" id="vkRowNumbers3"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+        import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+        import { getDatabase, ref, push, update, get, remove } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCEzHEok25mqtaCogNaANXDbQ1A6_vl5Hw",
+            authDomain: "crop-health-evaluation.firebaseapp.com",
+            databaseURL: "https://crop-health-evaluation-default-rtdb.firebaseio.com",
+            projectId: "crop-health-evaluation",
+            storageBucket: "crop-health-evaluation.firebasestorage.app",
+            messagingSenderId: "151852361455",
+            appId: "1:151852361455:web:f19ff1fefd7ca272ca5d1a"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        const uploadForm = document.getElementById("uploadForm");
+        const imageInput = document.getElementById("imageInput");
+        const plantingDateInput = document.getElementById("plantingDateInput");
+        const cropAgeInput = document.getElementById("cropAgeInput");
+        const cropLocationInput = document.getElementById("cropLocationInput");
+        const analyzeBtn = document.getElementById("analyzeBtn");
+        const statusText = document.getElementById("statusText");
+        const errorText = document.getElementById("errorText");
+        const latestResult = document.getElementById("latestResult");
+        const recordsList = document.getElementById("recordsList");
+        const refreshBtn = document.getElementById("refreshBtn");
+        const clearHistoryBtn = document.getElementById("clearHistoryBtn");
+        const logoutBtn = document.getElementById("logoutBtn");
+        const userBadge = document.getElementById("userBadge");
+        const modeBadge = document.getElementById("modeBadge");
+        const recordSearchInput = document.getElementById("recordSearchInput");
+
+        const editingBanner = document.getElementById("editingBanner");
+        const editingBannerText = document.getElementById("editingBannerText");
+        const cancelUpdateBtn = document.getElementById("cancelUpdateBtn");
+
+        const cameraModal = document.getElementById("cameraModal");
+        const openCameraBtn = document.getElementById("openCameraBtn");
+        const closeCameraBtn = document.getElementById("closeCameraBtn");
+        const startCameraBtn = document.getElementById("startCameraBtn");
+        const takePhotoBtn = document.getElementById("takePhotoBtn");
+        const analyzeSnapshotBtn = document.getElementById("analyzeSnapshotBtn");
+        const cameraVideo = document.getElementById("cameraVideo");
+        const cameraCanvas = document.getElementById("cameraCanvas");
+        const snapshotPreview = document.getElementById("snapshotPreview");
+        const cameraPlantingDateInput = document.getElementById("cameraPlantingDateInput");
+        const cameraCropAgeInput = document.getElementById("cameraCropAgeInput");
+        const cameraCropLocationInput = document.getElementById("cameraCropLocationInput");
+
+        const kioskExitZone = document.getElementById("kioskExitZone");
+        const kioskExitPanel = document.getElementById("kioskExitPanel");
+        const exitKioskBtn = document.getElementById("exitKioskBtn");
+        const hideKioskExitBtn = document.getElementById("hideKioskExitBtn");
+
+        const virtualKeyboard = document.getElementById("virtualKeyboard");
+        const vkLettersWrap = document.getElementById("vkLettersWrap");
+        const vkNumbersWrap = document.getElementById("vkNumbersWrap");
+        const vkModeBtn = document.getElementById("vkModeBtn");
+        const vkBackspaceBtn = document.getElementById("vkBackspaceBtn");
+        const vkSpaceBtn = document.getElementById("vkSpaceBtn");
+        const vkHideBtn = document.getElementById("vkHideBtn");
+        const vkRowLetters1 = document.getElementById("vkRowLetters1");
+        const vkRowLetters2 = document.getElementById("vkRowLetters2");
+        const vkRowLetters3 = document.getElementById("vkRowLetters3");
+        const vkRowLetters4 = document.getElementById("vkRowLetters4");
+        const vkRowNumbers1 = document.getElementById("vkRowNumbers1");
+        const vkRowNumbers2 = document.getElementById("vkRowNumbers2");
+        const vkRowNumbers3 = document.getElementById("vkRowNumbers3");
+
+        let currentUser = null;
+        let allRecords = [];
+        let editingRecord = null;
+        let currentStream = null;
+        let currentVideoTrack = null;
+        let snapshotBlob = null;
+        let isDemoMode = false;
+        let snapshotPreviewUrl = null;
+        let kioskTapCount = 0;
+        let kioskTapTimer = null;
+        let activeVkInput = null;
+        let vkNumbersMode = false;
+        let searchDebounceTimer = null;
+        let recordsHtmlCache = "";
+        let latestResultCacheKey = "";
+        let isStartingCamera = false;
+        let isStoppingCamera = false;
+
+        const DEMO_SESSION_KEY = "demo_mode_session";
+        const DEMO_RECORDS_KEY = "demo_mode_records";
+
+        const LETTER_ROWS = [
+            ["q","w","e","r","t","y","u","i","o","p"],
+            ["a","s","d","f","g","h","j","k","l"],
+            ["z","x","c","v","b","n","m"]
+        ];
+
+        const NUM_ROWS = [
+            ["1","2","3","4","5","6","7","8","9","0"],
+            ["-","/",";",":","(",")","₱","&","@","."],
+            [",","?","!","#","+"]
+        ];
+
+        function setText(el, value) {
+            const next = String(value ?? "");
+            if (el.textContent !== next) el.textContent = next;
+        }
+
+        function setStatus(message = "") {
+            setText(statusText, message);
+        }
+
+        function setError(message = "") {
+            setText(errorText, message);
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function formatValue(value, fallback = "N/A") {
+            if (value === null || value === undefined || value === "") return fallback;
+            return value;
+        }
+
+        function getDemoSession() {
+            try {
+                const raw = localStorage.getItem(DEMO_SESSION_KEY);
+                return raw ? JSON.parse(raw) : null;
+            } catch {
+                return null;
+            }
+        }
+
+        function getDemoRecords() {
+            try {
+                const raw = localStorage.getItem(DEMO_RECORDS_KEY);
+                return raw ? JSON.parse(raw) : [];
+            } catch {
+                return [];
+            }
+        }
+
+        function saveDemoRecords(records) {
+            localStorage.setItem(DEMO_RECORDS_KEY, JSON.stringify(records));
+        }
+
+        function calculateCropAgeFromPlantingDate(dateString) {
+            if (!dateString) return "";
+            const plantingDate = new Date(dateString + "T00:00:00");
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const diffMs = today - plantingDate;
+            const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+            return diffDays >= 0 ? diffDays : "";
+        }
+
+        function syncCropAgeFromPlantingDate(dateInput, ageInput) {
+            ageInput.value = calculateCropAgeFromPlantingDate(dateInput.value);
+        }
+
+        plantingDateInput.addEventListener("change", () => {
+            syncCropAgeFromPlantingDate(plantingDateInput, cropAgeInput);
+        });
+
+        cameraPlantingDateInput.addEventListener("change", () => {
+            syncCropAgeFromPlantingDate(cameraPlantingDateInput, cameraCropAgeInput);
+        });
+
+        function closeUpdateMode() {
+            editingRecord = null;
+            editingBanner.classList.remove("show");
+            editingBannerText.textContent = "You are updating a saved crop record.";
+            uploadForm.reset();
+            plantingDateInput.value = "";
+            cropAgeInput.value = "";
+            cropLocationInput.value = "";
+            imageInput.value = "";
+            analyzeBtn.textContent = "Run Analysis";
+        }
+
+        function openUpdateMode(record) {
+            editingRecord = record;
+            editingBanner.classList.add("show");
+            editingBannerText.textContent = `You are updating the saved record for ${record.crop_name || "this crop"} from ${record.captured_at || "previous capture"}.`;
+            plantingDateInput.value = record.planting_date || "";
+            cropAgeInput.value = record.crop_age_days ?? "";
+            cropLocationInput.value = record.locationNote || "";
+            cameraPlantingDateInput.value = record.planting_date || "";
+            cameraCropAgeInput.value = record.crop_age_days ?? "";
+            cameraCropLocationInput.value = record.locationNote || "";
+            analyzeBtn.textContent = "Update Crop Record";
+            window.scrollTo(0, 0);
+        }
+
+        cancelUpdateBtn.addEventListener("click", closeUpdateMode);
+
+        function buildRecordSearchText(record) {
+            return [
+                record.crop_name,
+                record.health_status,
+                record.growth_stage,
+                record.locationNote,
+                record.original_filename,
+                record.planting_date,
+                record.crop_age_days,
+                record.captured_at,
+                record.analysis_date,
+                record.possible_issue,
+                record.forecast_date,
+                record.yield_forecast_kg
+            ].map(item => String(item ?? "").toLowerCase()).join(" ");
+        }
+
+        function buildLatestResultHtml(record) {
+            const recommendations = Array.isArray(record.recommendations)
+                ? record.recommendations.map(item => `<li>${escapeHtml(item)}</li>`).join("")
+                : "<li>No recommendation available.</li>";
+
+            const cropNotes = Array.isArray(record.crop_specific_notes)
+                ? record.crop_specific_notes.map(item => `<li>${escapeHtml(item)}</li>`).join("")
+                : "";
+
+            return `
+                ${record.preview_url ? `<img src="${escapeHtml(record.preview_url)}" alt="Crop preview" class="result-image" loading="lazy" decoding="async">` : ""}
+                <div class="result-grid">
+                    <div class="result-pill"><strong>Crop:</strong><br>${escapeHtml(formatValue(record.crop_name))}</div>
+                    <div class="result-pill"><strong>Health Status:</strong><br>${escapeHtml(formatValue(record.health_status))}</div>
+                    <div class="result-pill"><strong>Confidence:</strong><br>${escapeHtml(formatValue(record.confidence_percent))}%</div>
+                    <div class="result-pill"><strong>Health Score:</strong><br>${escapeHtml(formatValue(record.health_score))}</div>
+                    <div class="result-pill"><strong>Growth Stage:</strong><br>${escapeHtml(formatValue(record.growth_stage))}</div>
+                    <div class="result-pill"><strong>Yield Forecast:</strong><br>${escapeHtml(formatValue(record.yield_forecast_kg))} kg</div>
+                    <div class="result-pill"><strong>Planting Date:</strong><br>${escapeHtml(formatValue(record.planting_date))}</div>
+                    <div class="result-pill"><strong>Crop Age:</strong><br>${escapeHtml(formatValue(record.crop_age_days))} day(s)</div>
+                    <div class="result-pill"><strong>Forecast Date:</strong><br>${escapeHtml(formatValue(record.forecast_date))}</div>
+                    <div class="result-pill"><strong>Days Remaining:</strong><br>${escapeHtml(formatValue(record.forecast_days_remaining))}</div>
+                </div>
+
+                <div class="section-box">
+                    <h3>Possible Issue / Advisory</h3>
+                    <div>${escapeHtml(formatValue(record.possible_issue, "No issue detected."))}</div>
+                </div>
+
+                ${record.confidence_note ? `
+                <div class="section-box">
+                    <h3>Confidence Note</h3>
+                    <div>${escapeHtml(record.confidence_note)}</div>
+                </div>
+                ` : ""}
+
+                <div class="section-box">
+                    <h3>Recommendations</h3>
+                    <ul>${recommendations}</ul>
+                </div>
+
+                ${cropNotes ? `
+                <div class="section-box">
+                    <h3>Crop-Specific Notes</h3>
+                    <ul>${cropNotes}</ul>
+                </div>
+                ` : ""}
+            `;
+        }
+
+        function renderLatestResult(record) {
+            if (!record) {
+                const empty = "Upload an image or use the webcam to start.";
+                if (latestResult.textContent !== empty || latestResult.innerHTML !== empty) {
+                    latestResult.innerHTML = empty;
+                }
+                latestResultCacheKey = "";
+                return;
+            }
+
+            const cacheKey = JSON.stringify({
+                id: record.id || "",
+                updatedAt: record.updatedAt || "",
+                captured_at_ts: record.captured_at_ts || "",
+                preview_url: record.preview_url || "",
+                crop_name: record.crop_name || "",
+                health_status: record.health_status || ""
+            });
+
+            if (cacheKey === latestResultCacheKey) return;
+
+            latestResult.innerHTML = buildLatestResultHtml(record);
+            latestResultCacheKey = cacheKey;
+        }
+
+        function buildRecordHtml(record) {
+            return `
+                <div class="record-item">
+                    <img class="record-thumb" src="${escapeHtml(record.preview_url || "")}" alt="Crop image" loading="lazy" decoding="async">
+                    <div class="record-meta">
+                        <div><strong>Crop:</strong> ${escapeHtml(formatValue(record.crop_name))}</div>
+                        <div><strong>Health:</strong> ${escapeHtml(formatValue(record.health_status))}</div>
+                        <div><strong>Stage:</strong> ${escapeHtml(formatValue(record.growth_stage))}</div>
+                        <div><strong>Planting Date:</strong> ${escapeHtml(formatValue(record.planting_date))}</div>
+                        <div><strong>Crop Age:</strong> ${escapeHtml(formatValue(record.crop_age_days))} day(s)</div>
+                        <div><strong>Location:</strong> ${escapeHtml(formatValue(record.locationNote))}</div>
+                        <div><strong>Yield Forecast:</strong> ${escapeHtml(formatValue(record.yield_forecast_kg))} kg</div>
+                        <div><strong>Captured At:</strong> ${escapeHtml(formatValue(record.captured_at))}</div>
+                    </div>
+                    <div class="record-actions">
+                        <button type="button" class="small-btn review-btn" data-action="review" data-id="${escapeHtml(record.id)}">Review</button>
+                        <button type="button" class="small-btn update-btn" data-action="update" data-id="${escapeHtml(record.id)}">Update Crop</button>
+                        <button type="button" class="small-btn edit-btn" data-action="edit-location" data-id="${escapeHtml(record.id)}">Edit Location</button>
+                        <button type="button" class="small-btn delete-btn" data-action="delete" data-id="${escapeHtml(record.id)}">Delete</button>
+                        <div class="location-edit-box hidden" id="location-edit-${escapeHtml(record.id)}">
+                            <textarea id="location-input-${escapeHtml(record.id)}" data-vk="true">${escapeHtml(record.locationNote || "")}</textarea>
+                            <div class="inline-actions">
+                                <button type="button" class="small-btn save-btn" data-action="save-location" data-id="${escapeHtml(record.id)}">Save</button>
+                                <button type="button" class="small-btn cancel-btn" data-action="cancel-location" data-id="${escapeHtml(record.id)}">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderRecords(records = []) {
+            if (!records.length) {
+                const empty = `<div>No records found.</div>`;
+                if (recordsList.innerHTML !== empty) {
+                    recordsList.innerHTML = empty;
+                }
+                recordsList.classList.remove("scrollable");
+                recordsHtmlCache = empty;
+                return;
+            }
+
+            const html = records.map(buildRecordHtml).join("");
+
+            if (recordsHtmlCache !== html) {
+                recordsList.innerHTML = html;
+                recordsHtmlCache = html;
+                bindVirtualKeyboardTargets(recordsList);
+            }
+
+            recordsList.classList.toggle("scrollable", records.length >= 3);
+        }
+
+        function applyRecordSearch() {
+            const keyword = recordSearchInput.value.trim().toLowerCase();
+            if (!keyword) {
+                renderRecords(allRecords);
+                return;
+            }
+            const filtered = allRecords.filter(record => buildRecordSearchText(record).includes(keyword));
+            renderRecords(filtered);
+        }
+
+        function applyRecordSearchDebounced() {
+            clearTimeout(searchDebounceTimer);
+            searchDebounceTimer = setTimeout(applyRecordSearch, 180);
+        }
+
+        recordSearchInput.addEventListener("input", applyRecordSearchDebounced);
+
+        async function loadUserRecords() {
+            if (isDemoMode) {
+                const records = getDemoRecords();
+                records.sort((a, b) => (b.captured_at_ts || 0) - (a.captured_at_ts || 0));
+                allRecords = records;
+                applyRecordSearch();
+                return;
+            }
+
+            if (!currentUser) return;
+
+            try {
+                if (!allRecords.length) {
+                    recordsList.innerHTML = `<div>Loading your records...</div>`;
+                    recordsHtmlCache = "";
+                }
+
+                const snapshot = await get(ref(db, `users/${currentUser.uid}/records`));
+                const data = snapshot.val() || {};
+                const records = Object.entries(data).map(([id, value]) => ({ id, ...value }));
+                records.sort((a, b) => (b.captured_at_ts || 0) - (a.captured_at_ts || 0));
+                allRecords = records;
+                applyRecordSearch();
+            } catch (error) {
+                console.error(error);
+                recordsList.innerHTML = `<div>Failed to load records.</div>`;
+                recordsHtmlCache = "";
+            }
+        }
+
+        refreshBtn.addEventListener("click", loadUserRecords);
+
+        clearHistoryBtn.addEventListener("click", async () => {
+            const confirmed = confirm("Clear all saved records?");
+            if (!confirmed) return;
+
+            try {
+                if (isDemoMode) {
+                    saveDemoRecords([]);
+                    allRecords = [];
+                    renderRecords([]);
+                    renderLatestResult(null);
+                    closeUpdateMode();
+                    setStatus("Demo history cleared.");
+                    setError("");
+                    return;
+                }
+
+                if (!currentUser) return;
+                await remove(ref(db, `users/${currentUser.uid}/records`));
+                allRecords = [];
+                renderRecords([]);
+                renderLatestResult(null);
+                closeUpdateMode();
+                setStatus("All records cleared.");
+                setError("");
+            } catch (error) {
+                console.error(error);
+                setError("Failed to clear record history.");
+            }
+        });
+
+        logoutBtn.addEventListener("click", async () => {
+            try {
+                if (isDemoMode) {
+                    localStorage.removeItem(DEMO_SESSION_KEY);
+                    window.location.href = "/auth";
+                    return;
+                }
+                await signOut(auth);
+                window.location.href = "/auth";
+            } catch (error) {
+                console.error(error);
+                setError("Failed to log out.");
+            }
+        });
+
+        recordsList.addEventListener("click", async (event) => {
+            const button = event.target.closest("button[data-action]");
+            if (!button) return;
+
+            const action = button.dataset.action;
+            const recordId = button.dataset.id;
+            const record = allRecords.find(item => item.id === recordId);
+            if (!record) return;
+
+            if (action === "review") {
+                renderLatestResult(record);
+                setStatus("Showing the selected record.");
+                setError("");
+                return;
+            }
+
+            if (action === "update") {
+                openUpdateMode(record);
+                return;
+            }
+
+            if (action === "delete") {
+                const confirmed = confirm("Delete this record?");
+                if (!confirmed) return;
+
+                try {
+                    if (isDemoMode) {
+                        const updated = allRecords.filter(item => item.id !== recordId);
+                        saveDemoRecords(updated);
+                        if (editingRecord && editingRecord.id === recordId) closeUpdateMode();
+                        await loadUserRecords();
+                        setStatus("Demo record deleted.");
+                        setError("");
+                        return;
+                    }
+
+                    if (!currentUser) return;
+                    await remove(ref(db, `users/${currentUser.uid}/records/${recordId}`));
+                    if (editingRecord && editingRecord.id === recordId) closeUpdateMode();
+                    await loadUserRecords();
+                    setStatus("Record deleted.");
+                    setError("");
+                } catch (error) {
+                    console.error(error);
+                    setError("Failed to delete record.");
+                }
+                return;
+            }
+
+            if (action === "edit-location") {
+                document.getElementById(`location-edit-${recordId}`)?.classList.remove("hidden");
+                bindVirtualKeyboardTargets(recordsList);
+                return;
+            }
+
+            if (action === "cancel-location") {
+                const editBox = document.getElementById(`location-edit-${recordId}`);
+                const input = document.getElementById(`location-input-${recordId}`);
+                if (input) input.value = record.locationNote || "";
+                editBox?.classList.add("hidden");
+                return;
+            }
+
+            if (action === "save-location") {
+                const input = document.getElementById(`location-input-${recordId}`);
+                const newLocation = input?.value?.trim() || "";
+
+                try {
+                    if (isDemoMode) {
+                        const updatedRecords = allRecords.map(item => {
+                            if (item.id === recordId) {
+                                return { ...item, locationNote: newLocation, updatedAt: Date.now() };
+                            }
+                            return item;
+                        });
+                        saveDemoRecords(updatedRecords);
+                        if (editingRecord && editingRecord.id === recordId) {
+                            editingRecord.locationNote = newLocation;
+                        }
+                        await loadUserRecords();
+                        setStatus("Demo record location updated.");
+                        setError("");
+                        return;
+                    }
+
+                    if (!currentUser) return;
+                    await update(ref(db, `users/${currentUser.uid}/records/${recordId}`), {
+                        locationNote: newLocation,
+                        updatedAt: Date.now()
+                    });
+
+                    if (editingRecord && editingRecord.id === recordId) {
+                        editingRecord.locationNote = newLocation;
+                    }
+
+                    await loadUserRecords();
+                    setStatus("Location updated.");
+                    setError("");
+                } catch (error) {
+                    console.error(error);
+                    setError("Failed to update location.");
+                }
+            }
+        });
+
+        async function saveAnalysisRecord(result, locationNote) {
+            const now = Date.now();
+            const payload = {
+                ...result,
+                locationNote: locationNote || "",
+                updatedAt: now,
+                captured_at_ts: now
+            };
+
+            if (isDemoMode) {
+                let records = getDemoRecords();
+
+                if (editingRecord?.id) {
+                    records = records.map(item => item.id === editingRecord.id ? { ...item, ...payload } : item);
+                    payload.id = editingRecord.id;
+                } else {
+                    payload.id = `demo_${now}`;
+                    payload.createdAt = now;
+                    records.unshift(payload);
+                }
+
+                saveDemoRecords(records);
+                return payload;
+            }
+
+            if (!currentUser) throw new Error("No authenticated user.");
+
+            payload.userUid = currentUser.uid;
+
+            if (editingRecord?.id) {
+                await update(ref(db, `users/${currentUser.uid}/records/${editingRecord.id}`), payload);
+                payload.id = editingRecord.id;
+            } else {
+                const newRef = push(ref(db, `users/${currentUser.uid}/records`));
+                await update(newRef, { ...payload, createdAt: now });
+                payload.id = newRef.key;
+            }
+
+            return payload;
+        }
+
+        async function requestAnalysis(file, plantingDate, cropAgeDays) {
+            const formData = new FormData();
+            formData.append("image", file);
+            if (plantingDate) formData.append("planting_date", plantingDate);
+            if (cropAgeDays !== "" && cropAgeDays !== null && cropAgeDays !== undefined) {
+                formData.append("crop_age_days", String(cropAgeDays));
+            }
+
+            const response = await fetch("/api/analyze", { method: "POST", body: formData });
+            const result = await response.json();
+            if (!response.ok || !result.success) throw new Error(result.error || "Analysis failed.");
+            return result;
+        }
+
+        async function handleAnalysis(file, plantingDate, cropAgeDays, locationNote, previewOverride = null) {
+            analyzeBtn.disabled = true;
+            setStatus(editingRecord ? "Updating crop record..." : "Analyzing crop image...");
+            setError("");
+
+            try {
+                const result = await requestAnalysis(file, plantingDate, cropAgeDays);
+
+                if (previewOverride) {
+                    result.preview_url = previewOverride;
+                }
+
+                const saved = await saveAnalysisRecord(result, locationNote);
+
+                if (previewOverride) {
+                    saved.preview_url = previewOverride;
+                }
+
+                renderLatestResult(saved);
+                await loadUserRecords();
+
+                setStatus(editingRecord ? "Crop record updated successfully." : "Analysis completed and saved successfully.");
+                setError("");
+
+                if (editingRecord) closeUpdateMode();
+
+                uploadForm.reset();
+                plantingDateInput.value = "";
+                cropAgeInput.value = "";
+                cropLocationInput.value = "";
+                imageInput.value = "";
+            } catch (error) {
+                console.error(error);
+                setError(error.message || "Something went wrong during analysis.");
+                setStatus("");
+            } finally {
+                analyzeBtn.disabled = false;
+            }
+        }
+
+        uploadForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const file = imageInput.files?.[0];
+            if (!file) {
+                setError("Please choose an image first.");
+                return;
+            }
+
+            const plantingDate = plantingDateInput.value.trim();
+            const cropAgeDays = cropAgeInput.value.trim();
+            const locationNote = cropLocationInput.value.trim();
+            await handleAnalysis(file, plantingDate, cropAgeDays, locationNote);
+        });
+
+        async function stopCamera() {
+            if (isStoppingCamera) return;
+            isStoppingCamera = true;
+
+            try {
+                if (currentStream) {
+                    currentStream.getTracks().forEach(track => {
+                        try { track.stop(); } catch {}
+                    });
+                }
+                currentStream = null;
+                currentVideoTrack = null;
+
+                if (cameraVideo.srcObject) {
+                    cameraVideo.pause();
+                    cameraVideo.srcObject = null;
+                    cameraVideo.load();
+                }
+            } finally {
+                isStoppingCamera = false;
+            }
+        }
+
+        function clearSnapshotPreview() {
+            snapshotBlob = null;
+
+            if (snapshotPreviewUrl) {
+                URL.revokeObjectURL(snapshotPreviewUrl);
+                snapshotPreviewUrl = null;
+            }
+
+            snapshotPreview.removeAttribute("src");
+            snapshotPreview.classList.add("hidden");
+        }
+
+        async function startCamera() {
+            if (isStartingCamera) return;
+            isStartingCamera = true;
+
+            try {
+                await stopCamera();
+                clearSnapshotPreview();
+
+                setStatus("Starting camera...");
+                setError("");
+
+                cameraVideo.autoplay = true;
+                cameraVideo.muted = true;
+                cameraVideo.playsInline = true;
+                cameraVideo.disablePictureInPicture = true;
+
+                const constraints = {
+                    video: {
+                        width: { ideal: 640, max: 640 },
+                        height: { ideal: 480, max: 480 },
+                        frameRate: { ideal: 12, max: 15 }
+                    },
+                    audio: false
+                };
+
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                currentStream = stream;
+                currentVideoTrack = stream.getVideoTracks()[0] || null;
+
+                cameraVideo.srcObject = stream;
+
+                await new Promise((resolve) => {
+                    if (cameraVideo.readyState >= 2) {
+                        resolve();
+                        return;
+                    }
+                    const onLoaded = () => {
+                        cameraVideo.removeEventListener("loadedmetadata", onLoaded);
+                        resolve();
+                    };
+                    cameraVideo.addEventListener("loadedmetadata", onLoaded, { once: true });
+                });
+
+                await cameraVideo.play();
+
+                setStatus("Camera started.");
+                setError("");
+            } catch (error) {
+                console.error(error);
+                setError(`Failed to access webcam: ${error.message || "Unknown error"}`);
+                setStatus("");
+            } finally {
+                isStartingCamera = false;
+            }
+        }
+
+        openCameraBtn.addEventListener("click", async () => {
+            cameraModal.classList.add("show");
+            await startCamera();
+            bindVirtualKeyboardTargets(cameraModal);
+        });
+
+        closeCameraBtn.addEventListener("click", async () => {
+            cameraModal.classList.remove("show");
+            await stopCamera();
+            clearSnapshotPreview();
+        });
+
+        startCameraBtn.addEventListener("click", startCamera);
+
+        takePhotoBtn.addEventListener("click", async () => {
+            if (!currentStream || !cameraVideo.videoWidth || !cameraVideo.videoHeight) {
+                setError("Start the camera first.");
+                return;
+            }
+
+            const width = cameraVideo.videoWidth || 640;
+            const height = cameraVideo.videoHeight || 480;
+
+            cameraCanvas.width = width;
+            cameraCanvas.height = height;
+
+            const ctx = cameraCanvas.getContext("2d", {
+                alpha: false,
+                desynchronized: true,
+                willReadFrequently: false
+            });
+
+            if (!ctx) {
+                setError("Failed to prepare camera snapshot.");
+                return;
+            }
+
+            ctx.drawImage(cameraVideo, 0, 0, width, height);
+
+            cameraCanvas.toBlob((blob) => {
+                if (!blob) {
+                    setError("Failed to capture snapshot.");
+                    return;
+                }
+
+                snapshotBlob = blob;
+
+                if (snapshotPreviewUrl) {
+                    URL.revokeObjectURL(snapshotPreviewUrl);
+                }
+
+                snapshotPreviewUrl = URL.createObjectURL(blob);
+                snapshotPreview.src = snapshotPreviewUrl;
+                snapshotPreview.classList.remove("hidden");
+
+                setStatus("Snapshot captured.");
+                setError("");
+            }, "image/jpeg", 0.88);
+        });
+
+        analyzeSnapshotBtn.addEventListener("click", async () => {
+            if (!snapshotBlob) {
+                setError("Take a snapshot first.");
+                return;
+            }
+
+            const plantingDate = cameraPlantingDateInput.value.trim();
+            const cropAgeDays = cameraCropAgeInput.value.trim();
+            const locationNote = cameraCropLocationInput.value.trim();
+            const snapshotFile = new File([snapshotBlob], `snapshot_${Date.now()}.jpg`, { type: "image/jpeg" });
+
+            await handleAnalysis(snapshotFile, plantingDate, cropAgeDays, locationNote, snapshotPreviewUrl);
+            cameraModal.classList.remove("show");
+            await stopCamera();
+            clearSnapshotPreview();
+        });
+
+        document.addEventListener("visibilitychange", async () => {
+            if (document.hidden) {
+                await stopCamera();
+            }
+        });
+
+        window.addEventListener("beforeunload", async () => {
+            await stopCamera();
+            clearSnapshotPreview();
+        });
+
+        function resetKioskTapSequence() {
+            kioskTapCount = 0;
+            if (kioskTapTimer) {
+                clearTimeout(kioskTapTimer);
+                kioskTapTimer = null;
+            }
+        }
+
+        function registerKioskTap(event) {
+            if (event) event.preventDefault();
+            kioskTapCount += 1;
+
+            if (kioskTapTimer) {
+                clearTimeout(kioskTapTimer);
+            }
+
+            kioskTapTimer = setTimeout(resetKioskTapSequence, 1200);
+
+            if (kioskTapCount >= 3) {
+                kioskExitPanel.classList.add("show");
+                setStatus("Hidden kiosk exit controls opened.");
+                setError("");
+                resetKioskTapSequence();
+            }
+        }
+
+        kioskExitZone.addEventListener("click", registerKioskTap);
+        kioskExitZone.addEventListener("touchstart", registerKioskTap, { passive: false });
+
+        hideKioskExitBtn.addEventListener("click", () => {
+            kioskExitPanel.classList.remove("show");
+        });
+
+        exitKioskBtn.addEventListener("click", async () => {
+            try {
+                setStatus("Exiting kiosk...");
+                setError("");
+                await fetch("/api/exit-kiosk", { method: "POST" });
+            } catch (error) {
+                console.error(error);
+                setError("Failed to send kiosk exit command.");
+            }
+        });
+
+        function enableDemoMode(session) {
+            isDemoMode = true;
+            currentUser = {
+                uid: "demo-mode-user",
+                email: session?.email || "demo@offline.local"
+            };
+
+            modeBadge.classList.remove("hidden");
+            userBadge.textContent = session?.displayName || "Demo Mode User";
+            loadUserRecords();
+        }
+
+        function createVkKey(label, value) {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "vk-key";
+            btn.textContent = label;
+            btn.addEventListener("click", () => insertAtCursor(value));
+            return btn;
+        }
+
+        function renderKeyboard() {
+            vkRowLetters1.innerHTML = "";
+            vkRowLetters2.innerHTML = "";
+            vkRowLetters3.innerHTML = "";
+            vkRowLetters4.innerHTML = "";
+            vkRowNumbers1.innerHTML = "";
+            vkRowNumbers2.innerHTML = "";
+            vkRowNumbers3.innerHTML = "";
+
+            LETTER_ROWS[0].forEach(key => vkRowLetters1.appendChild(createVkKey(key, key)));
+            LETTER_ROWS[1].forEach(key => vkRowLetters2.appendChild(createVkKey(key, key)));
+            LETTER_ROWS[2].forEach(key => vkRowLetters3.appendChild(createVkKey(key, key)));
+            ["-","/",".","@","_"].forEach(key => vkRowLetters4.appendChild(createVkKey(key, key)));
+
+            NUM_ROWS[0].forEach(key => vkRowNumbers1.appendChild(createVkKey(key, key)));
+            NUM_ROWS[1].forEach(key => vkRowNumbers2.appendChild(createVkKey(key, key)));
+            NUM_ROWS[2].forEach(key => vkRowNumbers3.appendChild(createVkKey(key, key)));
+        }
+
+        function setKeyboardMode(numbersMode) {
+            vkNumbersMode = numbersMode;
+            vkLettersWrap.classList.toggle("hidden", numbersMode);
+            vkNumbersWrap.classList.toggle("hidden", !numbersMode);
+            vkModeBtn.textContent = numbersMode ? "ABC" : "123";
+        }
+
+        function showKeyboard(target) {
+            activeVkInput = target;
+            virtualKeyboard.classList.add("show");
+            const type = (target.type || "").toLowerCase();
+            setKeyboardMode(type === "number" || type === "date");
+
+            requestAnimationFrame(() => {
+                target.scrollIntoView({ block: "center", behavior: "auto" });
+            });
+        }
+
+        function hideKeyboard() {
+            virtualKeyboard.classList.remove("show");
+            activeVkInput = null;
+        }
+
+        function insertAtCursor(text) {
+            if (!activeVkInput) return;
+
+            const input = activeVkInput;
+            const type = (input.type || "").toLowerCase();
+            const start = input.selectionStart ?? input.value.length;
+            const end = input.selectionEnd ?? input.value.length;
+            const value = input.value || "";
+
+            if (type === "number" && !/^[0-9.\-]*$/.test(text)) {
+                return;
+            }
+
+            input.value = value.slice(0, start) + text + value.slice(end);
+
+            const nextPos = start + text.length;
+            if (typeof input.setSelectionRange === "function") {
+                input.setSelectionRange(nextPos, nextPos);
+            }
+
+            input.dispatchEvent(new Event("input", { bubbles: true }));
+            input.focus();
+        }
+
+        function backspaceAtCursor() {
+            if (!activeVkInput) return;
+
+            const input = activeVkInput;
+            const start = input.selectionStart ?? input.value.length;
+            const end = input.selectionEnd ?? input.value.length;
+            const value = input.value || "";
+
+            if (start === 0 && end === 0) return;
+
+            if (start !== end) {
+                input.value = value.slice(0, start) + value.slice(end);
+                input.setSelectionRange?.(start, start);
+            } else {
+                input.value = value.slice(0, start - 1) + value.slice(end);
+                input.setSelectionRange?.(start - 1, start - 1);
+            }
+
+            input.dispatchEvent(new Event("input", { bubbles: true }));
+            input.focus();
+        }
+
+        function bindVirtualKeyboardTargets(scope = document) {
+            const fields = scope.querySelectorAll('input[data-vk="true"], textarea[data-vk="true"]');
+            fields.forEach(field => {
+                if (field.dataset.vkBound === "true") return;
+                const activate = () => showKeyboard(field);
+                field.addEventListener("focus", activate, { passive: true });
+                field.addEventListener("click", activate, { passive: true });
+                field.dataset.vkBound = "true";
+            });
+        }
+
+        vkModeBtn.addEventListener("click", () => {
+            setKeyboardMode(!vkNumbersMode);
+        });
+
+        vkBackspaceBtn.addEventListener("click", backspaceAtCursor);
+        vkSpaceBtn.addEventListener("click", () => insertAtCursor(" "));
+        vkHideBtn.addEventListener("click", hideKeyboard);
+
+        document.addEventListener("click", (event) => {
+            const insideKeyboard = virtualKeyboard.contains(event.target);
+            const vkField = event.target.closest('input[data-vk="true"], textarea[data-vk="true"]');
+            if (!insideKeyboard && !vkField) {
+                hideKeyboard();
+            }
+        });
+
+        renderKeyboard();
+        bindVirtualKeyboardTargets(document);
+
+        const demoSession = getDemoSession();
+        if (demoSession?.enabled) {
+            enableDemoMode(demoSession);
+        } else {
+            onAuthStateChanged(auth, async (user) => {
+                if (!user) {
+                    window.location.href = "/auth";
+                    return;
+                }
+
+                currentUser = user;
+                userBadge.textContent = user.email || "Logged in user";
+                await loadUserRecords();
+            });
+        }
+    </script>
+</body>
+</html>

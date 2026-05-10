@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Crop Health Evaluation</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #eef3f9 0%, #dfeaf7 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px 20px 220px;
+            color: #12345a;
+        }
+
+        .auth-shell {
+            width: 100%;
+            max-width: 980px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            background: #ffffff;
+            border-radius: 26px;
+            overflow: hidden;
+            box-shadow: 0 16px 40px rgba(18, 52, 90, 0.12);
+        }
+
+        .auth-left {
+            background: linear-gradient(180deg, #12345a 0%, #1a4d80 100%);
+            color: white;
+            padding: 42px 34px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .auth-left h1 {
+            font-size: 38px;
+            line-height: 1.1;
+            margin-bottom: 16px;
+        }
+
+        .auth-left p {
+            font-size: 17px;
+            line-height: 1.7;
+            color: rgba(255, 255, 255, 0.92);
+        }
+
+        .auth-right {
+            padding: 36px 28px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            border: none;
+            border-radius: 12px;
+            padding: 13px 16px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            background: #e7eef8;
+            color: #12345a;
+        }
+
+        .tab-btn.active {
+            background: #12345a;
+            color: white;
+        }
+
+        .panel {
+            display: none;
+        }
+
+        .panel.active {
+            display: block;
+        }
+
+        h2 {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .sub {
+            color: #5a7193;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .field {
+            margin-bottom: 16px;
+        }
+
+        .field label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 700;
+            font-size: 15px;
+        }
+
+        .field input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #d9e2ef;
+            border-radius: 12px;
+            font-size: 16px;
+            color: #12345a;
+            outline: none;
+        }
+
+        .field input:focus {
+            border-color: #8eb3f0;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.08);
+        }
+
+        .btn {
+            width: 100%;
+            border: none;
+            border-radius: 14px;
+            padding: 14px 18px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+
+        .btn-primary {
+            background: #18803a;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #2563eb;
+            color: white;
+        }
+
+        .btn-demo {
+            background: #ea580c;
+            color: white;
+        }
+
+        .divider {
+            text-align: center;
+            margin: 18px 0;
+            color: #7b8faa;
+            font-size: 14px;
+            position: relative;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            width: 38%;
+            height: 1px;
+            background: #d9e2ef;
+        }
+
+        .divider::before {
+            left: 0;
+        }
+
+        .divider::after {
+            right: 0;
+        }
+
+        .info-box {
+            margin-top: 16px;
+            border: 1px solid #fed7aa;
+            background: #fff7ed;
+            color: #9a3412;
+            border-radius: 14px;
+            padding: 14px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .status {
+            margin-top: 14px;
+            color: #12345a;
+            font-size: 15px;
+        }
+
+        .error {
+            margin-top: 14px;
+            color: #b91c1c;
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        .vk-container {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 5000;
+            background: #dde6f2;
+            border-top: 1px solid #c9d5e5;
+            padding: 8px 8px 10px;
+            display: none;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .vk-container.show {
+            display: block;
+        }
+
+        .vk-topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+            flex-wrap: wrap;
+        }
+
+        .vk-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #2d4668;
+        }
+
+        .vk-controls {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .vk-control-btn {
+            border: none;
+            border-radius: 8px;
+            background: #64748b;
+            color: white;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 7px 10px;
+            cursor: pointer;
+        }
+
+        .vk-row {
+            display: grid;
+            gap: 6px;
+            margin-bottom: 6px;
+        }
+
+        .vk-row.row-10 { grid-template-columns: repeat(10, 1fr); }
+        .vk-row.row-9 { grid-template-columns: repeat(9, 1fr); }
+        .vk-row.row-7 { grid-template-columns: repeat(7, 1fr); }
+        .vk-row.row-5 { grid-template-columns: repeat(5, 1fr); }
+
+        .vk-key {
+            border: 1px solid #bccbdd;
+            background: #ffffff;
+            border-radius: 10px;
+            min-height: 42px;
+            font-size: 18px;
+            font-weight: 700;
+            color: #223d60;
+            cursor: pointer;
+        }
+
+        @media (max-width: 860px) {
+            .auth-shell {
+                grid-template-columns: 1fr;
+            }
+
+            .auth-left {
+                padding: 28px 24px;
+            }
+
+            .auth-right {
+                padding: 28px 20px;
+            }
+
+            .auth-left h1 {
+                font-size: 30px;
+            }
+
+            body {
+                padding-bottom: 230px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-shell">
+        <div class="auth-left">
+            <h1>Crop Health Evaluation Platform</h1>
+            <p>
+                Sign in with Firebase when internet is available, or use Demo Mode when the connection is unstable during your capstone defense.
+            </p>
+        </div>
+
+        <div class="auth-right">
+            <div class="tabs">
+                <button class="tab-btn active" id="loginTabBtn" type="button">Log In</button>
+                <button class="tab-btn" id="signupTabBtn" type="button">Sign Up</button>
+            </div>
+
+            <div class="panel active" id="loginPanel">
+                <h2>Welcome Back</h2>
+                <div class="sub">Use your Firebase account to access synced crop records.</div>
+
+                <div class="field">
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" placeholder="Enter your email" data-vk="true">
+                </div>
+
+                <div class="field">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter your password" data-vk="true">
+                </div>
+
+                <button class="btn btn-primary" type="button" id="loginBtn">Log In</button>
+            </div>
+
+            <div class="panel" id="signupPanel">
+                <h2>Create Account</h2>
+                <div class="sub">Create a Firebase account for online syncing and record history.</div>
+
+                <div class="field">
+                    <label for="signupEmail">Email</label>
+                    <input type="email" id="signupEmail" placeholder="Enter your email" data-vk="true">
+                </div>
+
+                <div class="field">
+                    <label for="signupPassword">Password</label>
+                    <input type="password" id="signupPassword" placeholder="Create a password" data-vk="true">
+                </div>
+
+                <button class="btn btn-secondary" type="button" id="signupBtn">Sign Up</button>
+            </div>
+
+            <div class="divider">OR</div>
+
+            <button class="btn btn-demo" type="button" id="demoModeBtn">Enter Demo Mode (Offline Backup)</button>
+
+            <div class="info-box">
+                Demo Mode is for backup.
+            </div>
+
+            <div class="status" id="statusText"></div>
+            <div class="error" id="errorText"></div>
+        </div>
+    </div>
+
+    <div id="virtualKeyboard" class="vk-container">
+        <div class="vk-topbar">
+            <div class="vk-title">Touch Keyboard</div>
+            <div class="vk-controls">
+                <button type="button" class="vk-control-btn" id="vkModeBtn">123</button>
+                <button type="button" class="vk-control-btn" id="vkBackspaceBtn">⌫</button>
+                <button type="button" class="vk-control-btn" id="vkSpaceBtn">Space</button>
+                <button type="button" class="vk-control-btn" id="vkHideBtn">Hide</button>
+            </div>
+        </div>
+
+        <div id="vkLettersWrap">
+            <div class="vk-row row-10" id="vkRowLetters1"></div>
+            <div class="vk-row row-9" id="vkRowLetters2"></div>
+            <div class="vk-row row-7" id="vkRowLetters3"></div>
+            <div class="vk-row row-5" id="vkRowLetters4"></div>
+        </div>
+
+        <div id="vkNumbersWrap" class="hidden" style="display:none;">
+            <div class="vk-row row-10" id="vkRowNumbers1"></div>
+            <div class="vk-row row-10" id="vkRowNumbers2"></div>
+            <div class="vk-row row-5" id="vkRowNumbers3"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+        import {
+            getAuth,
+            signInWithEmailAndPassword,
+            createUserWithEmailAndPassword,
+            onAuthStateChanged
+        } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCEzHEok25mqtaCogNaANXDbQ1A6_vl5Hw",
+            authDomain: "crop-health-evaluation.firebaseapp.com",
+            databaseURL: "https://crop-health-evaluation-default-rtdb.firebaseio.com",
+            projectId: "crop-health-evaluation",
+            storageBucket: "crop-health-evaluation.firebasestorage.app",
+            messagingSenderId: "151852361455",
+            appId: "1:151852361455:web:f19ff1fefd7ca272ca5d1a"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        const loginTabBtn = document.getElementById("loginTabBtn");
+        const signupTabBtn = document.getElementById("signupTabBtn");
+        const loginPanel = document.getElementById("loginPanel");
+        const signupPanel = document.getElementById("signupPanel");
+
+        const loginEmail = document.getElementById("loginEmail");
+        const loginPassword = document.getElementById("loginPassword");
+        const signupEmail = document.getElementById("signupEmail");
+        const signupPassword = document.getElementById("signupPassword");
+
+        const loginBtn = document.getElementById("loginBtn");
+        const signupBtn = document.getElementById("signupBtn");
+        const demoModeBtn = document.getElementById("demoModeBtn");
+
+        const statusText = document.getElementById("statusText");
+        const errorText = document.getElementById("errorText");
+
+        const virtualKeyboard = document.getElementById("virtualKeyboard");
+        const vkLettersWrap = document.getElementById("vkLettersWrap");
+        const vkNumbersWrap = document.getElementById("vkNumbersWrap");
+        const vkModeBtn = document.getElementById("vkModeBtn");
+        const vkBackspaceBtn = document.getElementById("vkBackspaceBtn");
+        const vkSpaceBtn = document.getElementById("vkSpaceBtn");
+        const vkHideBtn = document.getElementById("vkHideBtn");
+        const vkRowLetters1 = document.getElementById("vkRowLetters1");
+        const vkRowLetters2 = document.getElementById("vkRowLetters2");
+        const vkRowLetters3 = document.getElementById("vkRowLetters3");
+        const vkRowLetters4 = document.getElementById("vkRowLetters4");
+        const vkRowNumbers1 = document.getElementById("vkRowNumbers1");
+        const vkRowNumbers2 = document.getElementById("vkRowNumbers2");
+        const vkRowNumbers3 = document.getElementById("vkRowNumbers3");
+
+        const LETTER_ROWS = [
+            ["q","w","e","r","t","y","u","i","o","p"],
+            ["a","s","d","f","g","h","j","k","l"],
+            ["z","x","c","v","b","n","m"]
+        ];
+
+        const NUM_ROWS = [
+            ["1","2","3","4","5","6","7","8","9","0"],
+            ["-","/",";",":","(",")","@",".","_","+"],
+            [",","?","!","#","&"]
+        ];
+
+        let activeVkInput = null;
+        let vkNumbersMode = false;
+
+        function setStatus(message = "") {
+            statusText.textContent = message;
+        }
+
+        function setError(message = "") {
+            errorText.textContent = message;
+        }
+
+        function showLoginPanel() {
+            loginTabBtn.classList.add("active");
+            signupTabBtn.classList.remove("active");
+            loginPanel.classList.add("active");
+            signupPanel.classList.remove("active");
+        }
+
+        function showSignupPanel() {
+            signupTabBtn.classList.add("active");
+            loginTabBtn.classList.remove("active");
+            signupPanel.classList.add("active");
+            loginPanel.classList.remove("active");
+        }
+
+        loginTabBtn.addEventListener("click", showLoginPanel);
+        signupTabBtn.addEventListener("click", showSignupPanel);
+
+        function createVkKey(label, value) {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "vk-key";
+            btn.textContent = label;
+            btn.addEventListener("click", () => insertAtCursor(value));
+            return btn;
+        }
+
+        function renderKeyboard() {
+            vkRowLetters1.innerHTML = "";
+            vkRowLetters2.innerHTML = "";
+            vkRowLetters3.innerHTML = "";
+            vkRowLetters4.innerHTML = "";
+            vkRowNumbers1.innerHTML = "";
+            vkRowNumbers2.innerHTML = "";
+            vkRowNumbers3.innerHTML = "";
+
+            LETTER_ROWS[0].forEach(key => vkRowLetters1.appendChild(createVkKey(key, key)));
+            LETTER_ROWS[1].forEach(key => vkRowLetters2.appendChild(createVkKey(key, key)));
+            LETTER_ROWS[2].forEach(key => vkRowLetters3.appendChild(createVkKey(key, key)));
+            ["-","/",".","@","_"].forEach(key => vkRowLetters4.appendChild(createVkKey(key, key)));
+
+            NUM_ROWS[0].forEach(key => vkRowNumbers1.appendChild(createVkKey(key, key)));
+            NUM_ROWS[1].forEach(key => vkRowNumbers2.appendChild(createVkKey(key, key)));
+            NUM_ROWS[2].forEach(key => vkRowNumbers3.appendChild(createVkKey(key, key)));
+        }
+
+        function setKeyboardMode(numbersMode) {
+            vkNumbersMode = numbersMode;
+            vkLettersWrap.style.display = numbersMode ? "none" : "block";
+            vkNumbersWrap.style.display = numbersMode ? "block" : "none";
+            vkModeBtn.textContent = numbersMode ? "ABC" : "123";
+        }
+
+        function showKeyboard(target) {
+            activeVkInput = target;
+            virtualKeyboard.classList.add("show");
+            const type = (target.type || "").toLowerCase();
+            setKeyboardMode(type === "number");
+            setTimeout(() => {
+                target.scrollIntoView({ block: "center", behavior: "auto" });
+            }, 80);
+        }
+
+        function hideKeyboard() {
+            virtualKeyboard.classList.remove("show");
+            activeVkInput = null;
+        }
+
+        function insertAtCursor(text) {
+            if (!activeVkInput) return;
+
+            const input = activeVkInput;
+            const start = input.selectionStart ?? input.value.length;
+            const end = input.selectionEnd ?? input.value.length;
+            const value = input.value || "";
+            input.value = value.slice(0, start) + text + value.slice(end);
+
+            const nextPos = start + text.length;
+            if (typeof input.setSelectionRange === "function") {
+                input.setSelectionRange(nextPos, nextPos);
+            }
+
+            input.dispatchEvent(new Event("input", { bubbles: true }));
+            input.focus();
+        }
+
+        function backspaceAtCursor() {
+            if (!activeVkInput) return;
+
+            const input = activeVkInput;
+            const start = input.selectionStart ?? input.value.length;
+            const end = input.selectionEnd ?? input.value.length;
+            const value = input.value || "";
+
+            if (start === 0 && end === 0) return;
+
+            if (start !== end) {
+                input.value = value.slice(0, start) + value.slice(end);
+                if (typeof input.setSelectionRange === "function") {
+                    input.setSelectionRange(start, start);
+                }
+            } else {
+                input.value = value.slice(0, start - 1) + value.slice(end);
+                if (typeof input.setSelectionRange === "function") {
+                    input.setSelectionRange(start - 1, start - 1);
+                }
+            }
+
+            input.dispatchEvent(new Event("input", { bubbles: true }));
+            input.focus();
+        }
+
+        function bindVirtualKeyboardTargets() {
+            const fields = document.querySelectorAll('input[data-vk="true"]');
+            fields.forEach(field => {
+                if (field.dataset.vkBound === "true") return;
+                const activate = () => showKeyboard(field);
+                field.addEventListener("focus", activate);
+                field.addEventListener("click", activate);
+                field.dataset.vkBound = "true";
+            });
+        }
+
+        vkModeBtn.addEventListener("click", () => {
+            setKeyboardMode(!vkNumbersMode);
+        });
+
+        vkBackspaceBtn.addEventListener("click", backspaceAtCursor);
+        vkSpaceBtn.addEventListener("click", () => insertAtCursor(" "));
+        vkHideBtn.addEventListener("click", hideKeyboard);
+
+        document.addEventListener("click", (event) => {
+            const insideKeyboard = virtualKeyboard.contains(event.target);
+            const vkField = event.target.closest('input[data-vk="true"]');
+            if (!insideKeyboard && !vkField) {
+                hideKeyboard();
+            }
+        });
+
+        loginBtn.addEventListener("click", async () => {
+            const email = loginEmail.value.trim();
+            const password = loginPassword.value.trim();
+
+            if (!email || !password) {
+                setError("Please enter your email and password.");
+                return;
+            }
+
+            try {
+                setStatus("Logging in...");
+                setError("");
+
+                await signInWithEmailAndPassword(auth, email, password);
+
+                localStorage.removeItem("demo_mode_session");
+                window.location.href = "/dashboard";
+            } catch (error) {
+                console.error(error);
+                setStatus("");
+                setError("Firebase login failed. If internet is unstable, use Demo Mode.");
+            }
+        });
+
+        signupBtn.addEventListener("click", async () => {
+            const email = signupEmail.value.trim();
+            const password = signupPassword.value.trim();
+
+            if (!email || !password) {
+                setError("Please enter your email and password.");
+                return;
+            }
+
+            try {
+                setStatus("Creating account...");
+                setError("");
+
+                await createUserWithEmailAndPassword(auth, email, password);
+
+                localStorage.removeItem("demo_mode_session");
+                window.location.href = "/dashboard";
+            } catch (error) {
+                console.error(error);
+                setStatus("");
+                setError("Sign up failed. Check your Firebase settings or internet connection.");
+            }
+        });
+
+        demoModeBtn.addEventListener("click", () => {
+            const demoSession = {
+                enabled: true,
+                mode: "demo",
+                email: "demo@offline.local",
+                displayName: "Demo Mode User",
+                createdAt: Date.now()
+            };
+
+            localStorage.setItem("demo_mode_session", JSON.stringify(demoSession));
+            window.location.href = "/dashboard";
+        });
+
+        renderKeyboard();
+        bindVirtualKeyboardTargets();
+
+        onAuthStateChanged(auth, (user) => {
+            const demoSession = localStorage.getItem("demo_mode_session");
+
+            if (demoSession) {
+                return;
+            }
+
+            if (user) {
+                window.location.href = "/dashboard";
+            }
+        });
+    </script>
+</body>
+</html>

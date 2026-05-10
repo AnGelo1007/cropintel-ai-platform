@@ -1,0 +1,40 @@
+TRAINING STEPS FOR YOUR PROJECT
+===============================
+
+1) Open terminal inside your project folder:
+   cd crop_ai_platform
+
+2) (Optional but recommended) activate your virtual environment:
+   .venv\Scripts\activate      (Windows)
+   source .venv/bin/activate   (Linux/macOS)
+
+3) Put your new images here:
+   dataset_crops/eggplant/
+   dataset_crops/pepper/
+
+4) Make each class reach at least 100 images:
+   python augment_to_target.py --input dataset_crops --target 100
+
+5) Split the dataset into train / val / test:
+   python prepare_dataset.py --input dataset_crops --output dataset_split
+
+6) Check your training script:
+   Make sure train_crop_classifier.py reads from dataset_split
+   instead of only dataset_crops if needed.
+
+7) Train the model:
+   python train_crop_classifier.py
+
+8) After training finishes:
+   - save the best model
+   - replace the old deployed model in your Raspberry Pi
+   - test with real webcam images
+
+Suggested accuracy improvements
+-------------------------------
+- Use more real images, not only augmented copies
+- Keep lighting and backgrounds varied
+- Remove blurry images
+- Keep labels correct
+- Try at least 70% train, 15% val, 15% test
+- Make class counts balanced

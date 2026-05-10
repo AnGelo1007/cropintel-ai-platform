@@ -1,0 +1,13 @@
+{
+  "input_size": [
+    224,
+    224
+  ],
+  "class_names": [
+    "corn",
+    "eggplant",
+    "pepper",
+    "rice",
+    "tomato"
+  ]
+}
