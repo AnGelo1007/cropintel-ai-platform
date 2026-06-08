@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pricing Plans | Crop Health Evaluation</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f4f8fc 0%, #e8f0fa 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+            color: #12345a;
+        }
+
+        .header-container {
+            width: 100%;
+            max-width: 1000px;
+            margin-bottom: 40px;
+            display: flex;
+            align-items: center;
+        }
+
+        .logo-area h1 {
+            font-size: 32px;
+            color: #18803a;
+            margin-bottom: 4px;
+        }
+
+        .logo-area p {
+            font-size: 14px;
+            color: #5a7193;
+        }
+
+        .title-container {
+            width: 100%;
+            max-width: 1000px;
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .title-container h2 {
+            font-size: 36px;
+            color: #18803a;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .title-container h2::before {
+            content: "⋙";
+            font-size: 40px;
+            color: #7ab536;
+        }
+
+        .table-container {
+            width: 100%;
+            max-width: 1000px;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 16px 40px rgba(18, 52, 90, 0.08);
+            overflow: hidden;
+            margin-bottom: 40px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 20px;
+            text-align: left;
+            border-bottom: 1px solid #edf2f7;
+            border-right: 1px solid #edf2f7;
+            vertical-align: middle;
+        }
+
+        th:last-child, td:last-child {
+            border-right: none;
+        }
+
+        th {
+            background: #609828;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        th:nth-child(1) { background: #568f23; }
+        th:nth-child(2) { background: #5c9726; }
+        th:nth-child(3) { background: #609828; }
+        th:nth-child(4) { background: #66a02b; }
+        th:nth-child(5) { background: #6ca52e; }
+
+        td {
+            font-size: 15px;
+            line-height: 1.5;
+            color: #334155;
+        }
+
+        td:not(:last-child) {
+            text-align: center;
+        }
+
+        tbody tr:hover {
+            background-color: #f8fafc;
+        }
+
+        .tier-name {
+            font-weight: bold;
+            color: #1e293b;
+        }
+
+        .action-container {
+            text-align: center;
+        }
+
+        .btn-continue {
+            display: inline-block;
+            background: #18803a;
+            color: white;
+            text-decoration: none;
+            padding: 16px 32px;
+            border-radius: 30px;
+            font-size: 18px;
+            font-weight: bold;
+            box-shadow: 0 8px 20px rgba(24, 128, 58, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .btn-continue:hover {
+            background: #146c31;
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(24, 128, 58, 0.4);
+        }
+
+        .btn-select {
+            display: inline-block;
+            background: #18803a;
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+        }
+
+        .btn-select:hover {
+            background: #146c31;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 860px) {
+            .table-container {
+                overflow-x: auto;
+            }
+            
+            table {
+                min-width: 900px;
+            }
+            
+            .header-container {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-container">
+        <div class="logo-area">
+            <h1>CropIntel</h1>
+            <p>Track Health. Predict Yield. Succeed.</p>
+        </div>
+    </div>
+
+    <div class="title-container">
+        <h2>Services and Prices</h2>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Subscription Tier</th>
+                    <th>Monthly Plan</th>
+                    <th>Yearly Plan</th>
+                    <th>Lifetime Plan</th>
+                    <th>Features Included</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="tier-name">Free Tier</td>
+                    <td>Free</td>
+                    <td>Free</td>
+                    <td>N/A</td>
+                    <td style="text-align: left;">Up to 5 image scans per month, basic crop health analysis, and limited monitoring features</td>
+                    <td><button class="btn-select" onclick="selectPlan('Free Tier')">Select</button></td>
+                </tr>
+                <tr>
+                    <td class="tier-name">Premium Tier</td>
+                    <td>₱499/month</td>
+                    <td>₱4,999/year</td>
+                    <td>₱9,999 one-time</td>
+                    <td style="text-align: left;">Unlimited image scans, AI-assisted crop analysis, detailed yield forecasting reports, historical crop tracking, and priority support</td>
+                    <td><button class="btn-select" onclick="selectPlan('Premium Tier')">Select</button></td>
+                </tr>
+                <tr>
+                    <td class="tier-name">Enterprise Tier</td>
+                    <td>Above ₱1,000/month</td>
+                    <td>Custom Pricing</td>
+                    <td>Negotiated Licensing</td>
+                    <td style="text-align: left;">Customized solutions for cooperatives, schools, agribusinesses, and Local Government Units (LGUs)</td>
+                    <td><button class="btn-select" onclick="selectPlan('Enterprise Tier')">Select</button></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        function selectPlan(planName) {
+            localStorage.setItem('selectedPlan', planName);
+            window.location.href = '/dashboard';
+        }
+    </script>
+</body>
+</html>

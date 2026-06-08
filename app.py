@@ -1,31 +1,29 @@
+import os
 from pathlib import Path
 from datetime import datetime
 import subprocess
-from flask import Flask
-from flask_cors import CORS
-
-app = Flask(__name__)
-CORS(app)
-
 from flask import Flask, render_template, request, jsonify, send_from_directory, redirect, url_for
-
+from flask_cors import CORS
 from services.inference import analyze_image, get_health_status
+
+# 1. Initialize App with specified static/template folders
+app = Flask(__name__, template_folder="templates", static_folder="static")
+app.config['TEMPLATES_AUTO_RELOAD'] = True
+
+# 2. Configure CORS to allow your Firebase frontend to access this API
+# This resolves potential blockages when the web app tries to send images to Render
+CORS(app, resources={r"/api/*": {"origins": "https://crop-health-evaluation.web.app"}})
 
 BASE_DIR = Path(__file__).resolve().parent
 UPLOAD_DIR = BASE_DIR / "uploads"
 UPLOAD_DIR.mkdir(exist_ok=True)
 
-app = Flask(__name__, template_folder="templates", static_folder="static")
-
-
 def _parse_crop_age(raw_value):
     if raw_value is None:
         return None
-
     cleaned = str(raw_value).strip()
     if cleaned == "":
         return None
-
     try:
         value = int(cleaned)
         if value < 0:
@@ -34,7 +32,6 @@ def _parse_crop_age(raw_value):
     except (TypeError, ValueError):
         return None
 
-
 @app.after_request
 def add_no_cache_headers(response):
     response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
@@ -42,26 +39,27 @@ def add_no_cache_headers(response):
     response.headers["Expires"] = "0"
     return response
 
+# --- ROUTES ---
 
 @app.route("/")
 def home():
     return redirect(url_for("auth_page"))
 
+@app.route("/pricing")
+def pricing_page():
+    return render_template("pricing.html")
 
 @app.route("/auth")
 def auth_page():
     return render_template("auth.html")
 
-
 @app.route("/dashboard")
 def dashboard():
     return render_template("index.html")
 
-
 @app.route("/api/health", methods=["GET"])
 def api_health():
     return jsonify(get_health_status())
-
 
 @app.route("/api/analyze", methods=["POST"])
 def api_analyze():
@@ -69,7 +67,6 @@ def api_analyze():
         return jsonify({"success": False, "error": "No image file uploaded."}), 400
 
     image_file = request.files["image"]
-
     if not image_file or image_file.filename == "":
         return jsonify({"success": False, "error": "Empty image file."}), 400
 
@@ -113,7 +110,6 @@ def api_analyze():
     except Exception as e:
         return jsonify({"success": False, "error": f"Analysis failed: {str(e)}"}), 500
 
-
 @app.route("/api/exit-kiosk", methods=["POST"])
 def api_exit_kiosk():
     try:
@@ -123,11 +119,12 @@ def api_exit_kiosk():
     except Exception as e:
         return jsonify({"success": False, "error": f"Failed to exit kiosk: {str(e)}"}), 500
 
-
 @app.route("/uploads/<path:filename>")
 def uploaded_file(filename):
     return send_from_directory(UPLOAD_DIR, filename)
 
-
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=False, threaded=True)
+    # Render requires the app to listen on a port defined by an environment variable
+    # This falls back to 5000 for local testing
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=False, threaded=True)

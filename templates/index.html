@@ -103,6 +103,16 @@
             font-weight: 700;
         }
 
+        .plan-badge {
+            background: #f0fdf4;
+            border: 1px solid #86efac;
+            color: #166534;
+            border-radius: 999px;
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
         .grid {
             display: grid;
             grid-template-columns: 1fr 1.05fr;
@@ -640,6 +650,7 @@
             </div>
 
             <div class="topbar-actions">
+                <div id="planBadge" class="plan-badge hidden"></div>
                 <div id="modeBadge" class="mode-badge hidden">Demo Mode</div>
                 <div id="userBadge" class="user-badge">Checking session...</div>
                 <button type="button" class="btn btn-red" id="logoutBtn">Log Out</button>
@@ -787,6 +798,21 @@
             <div class="vk-row row-5" id="vkRowNumbers3"></div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const selectedPlan = localStorage.getItem("selectedPlan");
+            if (!selectedPlan) {
+                window.location.href = "/pricing";
+            } else {
+                const planBadge = document.getElementById("planBadge");
+                if (planBadge) {
+                    planBadge.textContent = "Plan: " + selectedPlan;
+                    planBadge.classList.remove("hidden");
+                }
+            }
+        });
+    </script>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
